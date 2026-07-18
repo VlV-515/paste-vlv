@@ -12,6 +12,8 @@ private let pinboardPalette = [
     "#94A3B8"
 ]
 
+private let selectedCardOutline = Color(red: 0.84, green: 0.62, blue: 0.26)
+
 struct ClipboardPanelView: View {
     @ObservedObject var appState: AppState
     let onPaste: (ClipboardItem, Bool) -> Void
@@ -334,17 +336,23 @@ private struct ClipboardCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .stroke(
-                    isSelected ? Color.white.opacity(0.96) : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9),
-                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 3)
+                    isSelected ? selectedCardOutline : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9),
+                    lineWidth: isSelected ? 3 : (item.pinboardID == nil ? 1 : 3)
                 )
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color(hex: accentHex).opacity(isSelected ? 0.94 : 0), lineWidth: 2)
-                .padding(3)
+                .stroke(isSelected ? Color.black.opacity(0.30) : Color.clear, lineWidth: 1)
+                .padding(4)
         )
-        .shadow(color: isSelected ? Color.white.opacity(0.16) : .black.opacity(0.22), radius: isSelected ? 14 : 8, y: 3)
-        .scaleEffect(isSelected ? 1.018 : 1)
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(selectedCardOutline.opacity(isSelected ? 0.52 : 0), lineWidth: 2)
+                .padding(-3)
+        )
+        .shadow(color: isSelected ? selectedCardOutline.opacity(0.22) : .black.opacity(0.22), radius: isSelected ? 10 : 8, y: 3)
+        .shadow(color: .black.opacity(isSelected ? 0.30 : 0.22), radius: isSelected ? 14 : 8, y: 4)
+        .scaleEffect(isSelected ? 1.01 : 1)
         .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .onTapGesture {
             onSelect()
