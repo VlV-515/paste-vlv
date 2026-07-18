@@ -39,6 +39,8 @@ open dist/PasteVLv.app
 
 For direct paste into other apps, macOS needs Accessibility permission:
 `System Settings > Privacy & Security > Accessibility > PasteVLv`.
+If macOS keeps asking after PasteVLv is already enabled, remove PasteVLv from
+that list, add `dist/PasteVLv.app` again, and restart the app.
 
 ## iCloud Sync Status
 

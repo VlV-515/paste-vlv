@@ -4,13 +4,16 @@ import Carbon.HIToolbox
 import Foundation
 
 final class PasteController {
+    private var didRequestAccessibilityPrompt = false
+
     func copy(_ item: ClipboardItem, asPlainText: Bool = false) {
         placeOnPasteboard(item, asPlainText: asPlainText)
     }
 
     func paste(_ item: ClipboardItem, asPlainText: Bool = false) {
         placeOnPasteboard(item, asPlainText: asPlainText)
-        requestAccessibilityIfNeeded()
+
+        guard canSendDirectPaste() else { return }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             self.sendCommandV()
@@ -48,10 +51,14 @@ final class PasteController {
         }
     }
 
-    private func requestAccessibilityIfNeeded() {
-        guard !AXIsProcessTrusted() else { return }
+    private func canSendDirectPaste() -> Bool {
+        guard !AXIsProcessTrusted() else { return true }
+        guard !didRequestAccessibilityPrompt else { return false }
+
+        didRequestAccessibilityPrompt = true
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
+        return false
     }
 
     private func sendCommandV() {
