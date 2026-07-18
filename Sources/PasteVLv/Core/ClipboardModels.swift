@@ -8,14 +8,6 @@ enum ClipboardKind: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    var title: String {
-        switch self {
-        case .text: return "Text"
-        case .link: return "Link"
-        case .image: return "Image"
-        case .file: return "File"
-        }
-    }
 }
 
 struct ClipboardItem: Identifiable, Equatable {

@@ -19,6 +19,15 @@ When a change alters architecture, validation commands, packaging, CloudKit
 status, permissions, or user-facing behavior, update the relevant docs in the
 same commit as the code change.
 
+Current user-facing language behavior:
+
+- `AppSettings.appLanguage` persists the choice; its default is English.
+- Preferences > General shows the selector with **🇺🇸 English** and
+  **🇲🇽 Español**. UI strings must use `AppCopy`, not new hard-coded text.
+- Changing language updates SwiftUI surfaces, native dialogs, and the AppKit
+  menu-bar menu. User-created pinboard names are content, so never translate
+  or rename them.
+
 Current user-facing backup behavior:
 
 - Group backup import/export lives in `AppState`, with persistence handled by

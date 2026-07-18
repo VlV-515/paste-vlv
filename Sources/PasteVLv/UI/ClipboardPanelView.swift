@@ -26,6 +26,10 @@ struct ClipboardPanelView: View {
     @State private var newPinboardName = ""
     @State private var newPinboardColor = pinboardPalette[0]
 
+    private var copy: AppCopy {
+        AppCopy(language: appState.appLanguage)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             topBar
@@ -35,10 +39,12 @@ struct ClipboardPanelView: View {
         .background(panelBackground)
         .sheet(isPresented: $isAddingPinboard) {
             PinboardEditorView(
-                title: "Nuevo grupo",
+                title: copy.newGroup,
                 name: $newPinboardName,
                 colorHex: $newPinboardColor,
-                primaryTitle: "Crear",
+                primaryTitle: copy.create,
+                namePrompt: copy.name,
+                cancelTitle: copy.cancel,
                 onCancel: resetNewPinboard,
                 onSave: {
                     appState.createPinboard(name: newPinboardName, colorHex: newPinboardColor)
@@ -68,7 +74,7 @@ struct ClipboardPanelView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.white.opacity(0.62))
-                    TextField("", text: $appState.searchText, prompt: Text("Buscar").foregroundColor(.white.opacity(0.42)))
+                    TextField("", text: $appState.searchText, prompt: Text(copy.search).foregroundColor(.white.opacity(0.42)))
                         .textFieldStyle(.plain)
                         .focused($isSearchFocused)
                         .foregroundStyle(.white)
@@ -78,21 +84,21 @@ struct ClipboardPanelView: View {
                 Spacer()
 
                 Menu {
-                    Button("Exportar grupos...") {
+                    Button(copy.exportGroups) {
                         appState.exportHistoryInteractively()
                     }
-                    Button("Importar grupos...") {
+                    Button(copy.importGroups) {
                         appState.importHistoryInteractively()
                     }
                     Divider()
-                    Button("Preferencias...") {
+                    Button(copy.preferences) {
                         onOpenPreferences()
                     }
                     Divider()
-                    Button(appState.isCapturePaused ? "Reanudar captura" : "Pausar captura") {
+                    Button(appState.isCapturePaused ? copy.resumeCapture : copy.pauseCapture) {
                         appState.isCapturePaused.toggle()
                     }
-                    Button("Cerrar") {
+                    Button(copy.close) {
                         onClose()
                     }
                 } label: {
@@ -105,7 +111,7 @@ struct ClipboardPanelView: View {
 
             HStack(spacing: 18) {
                 PinboardTab(
-                    title: "Clipboard History",
+                    title: copy.clipboardHistory,
                     colorHex: "#C7CDD8",
                     isSelected: appState.selectedPinboardID == nil,
                     onSelect: { appState.select(pinboardID: nil) }
@@ -121,13 +127,13 @@ struct ClipboardPanelView: View {
                                 onSelect: { appState.select(pinboardID: pinboard.id) }
                             )
                             .contextMenu {
-                                Button("Renombrar") {
+                                Button(copy.rename) {
                                     editingPinboard = pinboard
                                 }
                                 Button(role: .destructive) {
                                     appState.delete(pinboardID: pinboard.id)
                                 } label: {
-                                    Text("Eliminar")
+                                    Text(copy.delete)
                                 }
                                 Divider()
                                 ForEach(pinboardPalette, id: \.self) { colorHex in
@@ -135,7 +141,7 @@ struct ClipboardPanelView: View {
                                         appState.update(pinboardID: pinboard.id, name: pinboard.name, colorHex: colorHex)
                                     } label: {
                                         Label {
-                                            Text(colorName(colorHex))
+                                            Text(copy.colorName(colorHex))
                                         } icon: {
                                             Image(
                                                 nsImage: pinboardColorMenuIcon(
@@ -163,7 +169,7 @@ struct ClipboardPanelView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white.opacity(0.68))
-                .help("Agregar grupo")
+                .help(copy.addGroup)
             }
         }
         .padding(.horizontal, 28)
@@ -185,6 +191,7 @@ struct ClipboardPanelView: View {
                                     accentHex: appState.colorHex(for: item),
                                     pinboardName: appState.pinboardName(for: item),
                                     pinboards: appState.pinboards,
+                                    copy: AppCopy(language: appState.appLanguage),
                                     isSelected: appState.selectedItemID == item.id,
                                     onSelect: { appState.selectItem(id: item.id) },
                                     onPaste: { onPaste(item, false) },
@@ -221,10 +228,10 @@ struct ClipboardPanelView: View {
             Image(systemName: "clipboard")
                 .font(.system(size: 40))
                 .foregroundStyle(.white.opacity(0.46))
-            Text("Copia algo para iniciar el historial")
+            Text(AppCopy(language: appState.appLanguage).emptyHistory)
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.82))
-            Text(appState.openShortcut.displayName + " abre " + AppBranding.displayName)
+            Text(appState.openShortcut.displayName + AppCopy(language: appState.appLanguage).shortcutOpensApp + AppBranding.displayName)
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.52))
         }
@@ -336,6 +343,7 @@ private struct ClipboardCard: View {
     let accentHex: String
     let pinboardName: String?
     let pinboards: [Pinboard]
+    let copy: AppCopy
     let isSelected: Bool
     let onSelect: () -> Void
     let onPaste: () -> Void
@@ -382,14 +390,14 @@ private struct ClipboardCard: View {
         }
         .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
-            Button("Pegar") { onPaste() }
-            Button("Pegar como texto plano") { onPastePlain() }
+            Button(copy.paste) { onPaste() }
+            Button(copy.pastePlainTextAction) { onPastePlain() }
                 .disabled(item.kind == .image || item.kind == .file)
             Divider()
-            Button(item.isFavorite ? "Quitar favorito" : "Favorito") { onFavorite() }
-            Button(item.isPinned ? "Desfijar" : "Fijar") { onPin() }
-            Menu("Mover a grupo") {
-                Button("Sin grupo") { onAssign(nil) }
+            Button(item.isFavorite ? copy.removeFavorite : copy.favorite) { onFavorite() }
+            Button(item.isPinned ? copy.unpin : copy.pin) { onPin() }
+            Menu(copy.moveToGroup) {
+                Button(copy.noGroup) { onAssign(nil) }
                 ForEach(pinboards) { pinboard in
                     Button(pinboard.name) { onAssign(pinboard.id) }
                 }
@@ -398,7 +406,7 @@ private struct ClipboardCard: View {
             Button(role: .destructive) {
                 onDelete()
             } label: {
-                Text("Eliminar")
+                Text(copy.delete)
             }
         }
     }
@@ -406,7 +414,7 @@ private struct ClipboardCard: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.kind.displayTitle)
+                Text(copy.clipboardKindTitle(item.kind))
                     .font(.system(size: 21, weight: .medium))
                     .lineLimit(1)
                 Text(item.createdAt, style: .relative)
@@ -532,11 +540,11 @@ private struct ClipboardCard: View {
         }
         switch item.kind {
         case .text, .link:
-            return "\(item.preview.count) caracteres"
+            return copy.characters(item.preview.count)
         case .image:
-            return "imagen"
+            return copy.itemKindDetail(.image)
         case .file:
-            return "archivo"
+            return copy.itemKindDetail(.file)
         }
     }
 }
@@ -557,10 +565,12 @@ private struct PinboardEditSheet: View {
 
     var body: some View {
         PinboardEditorView(
-            title: "Editar grupo",
+            title: AppCopy(language: appState.appLanguage).editGroup,
             name: $name,
             colorHex: $colorHex,
-            primaryTitle: "Guardar",
+            primaryTitle: AppCopy(language: appState.appLanguage).save,
+            namePrompt: AppCopy(language: appState.appLanguage).name,
+            cancelTitle: AppCopy(language: appState.appLanguage).cancel,
             onCancel: { dismiss() },
             onSave: {
                 appState.update(pinboardID: pinboard.id, name: name, colorHex: colorHex)
@@ -575,6 +585,8 @@ private struct PinboardEditorView: View {
     @Binding var name: String
     @Binding var colorHex: String
     let primaryTitle: String
+    let namePrompt: String
+    let cancelTitle: String
     let onCancel: () -> Void
     let onSave: () -> Void
 
@@ -583,7 +595,7 @@ private struct PinboardEditorView: View {
             Text(title)
                 .font(.headline)
 
-            TextField("Nombre", text: $name)
+            TextField(namePrompt, text: $name)
                 .textFieldStyle(.roundedBorder)
 
             HStack(spacing: 10) {
@@ -605,7 +617,7 @@ private struct PinboardEditorView: View {
 
             HStack {
                 Spacer()
-                Button("Cancelar", action: onCancel)
+                Button(cancelTitle, action: onCancel)
                 Button(primaryTitle, action: onSave)
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .keyboardShortcut(.return, modifiers: [])
@@ -613,18 +625,6 @@ private struct PinboardEditorView: View {
         }
         .padding(22)
         .frame(width: 320)
-    }
-}
-
-private func colorName(_ hex: String) -> String {
-    switch hex {
-    case "#F85B5B": return "Rojo"
-    case "#F59E0B": return "Naranja"
-    case "#FACC15": return "Amarillo"
-    case "#63D957": return "Verde"
-    case "#38BDF8": return "Azul"
-    case "#C084FC": return "Morado"
-    default: return "Gris"
     }
 }
 
@@ -668,15 +668,6 @@ private func pinboardColorMenuIcon(colorHex: String, isSelected: Bool) -> NSImag
 }
 
 private extension ClipboardKind {
-    var displayTitle: String {
-        switch self {
-        case .text: return "Texto"
-        case .link: return "Enlace"
-        case .image: return "Imagen"
-        case .file: return "Archivo"
-        }
-    }
-
     var iconName: String {
         switch self {
         case .text: return "text.alignleft"

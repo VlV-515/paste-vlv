@@ -5,6 +5,8 @@
 - `Sources/PasteVLv/App/PasteVLvMain.swift`: AppKit entrypoint.
 - `Sources/PasteVLv/App/AppDelegate.swift`: app wiring, status item, panel,
   monitor, hotkey lifecycle.
+- `Sources/PasteVLv/App/AppLocalization.swift`: English/Spanish interface copy
+  and language metadata.
 
 ## Core
 
@@ -17,7 +19,7 @@
 
 ## Services
 
-- `AppSettings.swift`: preferences, pause, retention, shortcut, and excluded bundle IDs.
+- `AppSettings.swift`: preferences, pause, retention, shortcut, language, and excluded bundle IDs.
 - `ClipboardMonitor.swift`: `NSPasteboard` polling and content normalization.
 - `HotKeyManager.swift`: configurable global shortcut.
 - `PasteController.swift`: write selected item to pasteboard and send `Cmd-V`.

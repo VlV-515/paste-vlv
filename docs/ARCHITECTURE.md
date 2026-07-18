@@ -27,7 +27,10 @@
    a click in another app.
 7. `AppState` opens native import/export panels for group backups and delegates
    JSON archive reads/writes to `ClipboardRepository`.
-8. `PasteController` places a selected item back on `NSPasteboard` and sends
+8. `AppSettings` persists the selected app language. `AppCopy` supplies English
+   (default) or Spanish UI strings; SwiftUI views and the AppKit status menu
+   refresh when it changes.
+9. `PasteController` places a selected item back on `NSPasteboard` and sends
    `Cmd-V` with `CGEvent`.
 
 ## Keyboard Interaction
@@ -70,6 +73,9 @@ The model is CloudKit-friendly but CloudKit is not turned on yet. To enable it:
 
 ## Known Constraints
 
+- Interface language is independent of macOS language. Preferences offers
+  **🇺🇸 English** by default and **🇲🇽 Español** as the alternate option. The
+  choice is stored in `UserDefaults`; user-created pinboard names stay intact.
 - Running with `swift run` is useful for development, but the packaged `.app`
   is better for macOS privacy prompts.
 - Direct paste needs Accessibility permission.

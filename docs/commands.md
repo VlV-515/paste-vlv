@@ -97,7 +97,11 @@ open dist/Paste-vlv.app
 - For direct paste into other apps, macOS needs Accessibility permission for
   the packaged app.
 - Group backup and restore are UI actions, not CLI commands:
-  `Exportar grupos...` and `Importar grupos...` live in the menu bar menu,
-  panel menu, and Preferences > General.
+  `Export groups...` / `Import groups...` live in the menu bar menu, panel
+  menu, and Preferences > General. Their labels switch to Spanish when the
+  interface language is **🇲🇽 Español**.
+- Interface language is a UI preference, not a CLI command. Open
+  Preferences > General > Language and select **🇺🇸 English** (default) or
+  **🇲🇽 Español**. The choice persists locally.
 - Those JSON backups include only grouped texts. General history, images,
   files, and links stay out on purpose.

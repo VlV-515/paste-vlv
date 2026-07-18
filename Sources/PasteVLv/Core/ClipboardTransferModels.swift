@@ -80,8 +80,21 @@ struct ClipboardHistoryExportSummary {
     let omittedUngroupedItems: Int
     let omittedNonTextGroupedItems: Int
 
-    var message: String {
-        [
+    func message(language: AppLanguage) -> String {
+        if language == .english {
+            return [
+                "Backup saved.",
+                "Groups exported: \(exportedPinboards)",
+                "Text items exported: \(exportedItems)",
+                "",
+                "Note:",
+                "Ungrouped history items omitted: \(omittedUngroupedItems)",
+                "Non-text items in groups omitted: \(omittedNonTextGroupedItems)",
+                "Reason: exporting everything, especially images, would make the JSON much larger."
+            ].joined(separator: "\n")
+        }
+
+        return [
             "Respaldo guardado.",
             "Grupos exportados: \(exportedPinboards)",
             "Textos exportados: \(exportedItems)",
@@ -100,13 +113,21 @@ struct ClipboardHistoryImportSummary {
     let createdItems: Int
     let updatedItems: Int
 
-    var message: String {
-        [
-            "Grupos nuevos: \(createdPinboards)",
-            "Grupos actualizados: \(updatedPinboards)",
-            "Textos nuevos: \(createdItems)",
-            "Textos actualizados: \(updatedItems)"
-        ].joined(separator: "\n")
+    func message(language: AppLanguage) -> String {
+        let values = language == .english
+            ? [
+                "New groups: \(createdPinboards)",
+                "Updated groups: \(updatedPinboards)",
+                "New text items: \(createdItems)",
+                "Updated text items: \(updatedItems)"
+            ]
+            : [
+                "Grupos nuevos: \(createdPinboards)",
+                "Grupos actualizados: \(updatedPinboards)",
+                "Textos nuevos: \(createdItems)",
+                "Textos actualizados: \(updatedItems)"
+            ]
+        return values.joined(separator: "\n")
     }
 }
 
@@ -120,21 +141,26 @@ enum ClipboardTransferError: LocalizedError {
     case invalidArchive
 
     var errorDescription: String? {
+        message(language: .english)
+    }
+
+    func message(language: AppLanguage) -> String {
+        let english = language == .english
         switch self {
         case .unsupportedSchemaVersion(let version):
-            return "Versión de respaldo no soportada: \(version)."
+            return english ? "Unsupported backup version: \(version)." : "Versión de respaldo no soportada: \(version)."
         case .duplicatePinboardID(let id):
-            return "El JSON tiene grupos duplicados con id \(id.uuidString)."
+            return english ? "The JSON contains duplicate groups with id \(id.uuidString)." : "El JSON tiene grupos duplicados con id \(id.uuidString)."
         case .duplicateItemID(let id):
-            return "El JSON tiene items duplicados con id \(id.uuidString)."
+            return english ? "The JSON contains duplicate items with id \(id.uuidString)." : "El JSON tiene items duplicados con id \(id.uuidString)."
         case .missingPinboardAssignment(let id):
-            return "El JSON tiene texto sin grupo asignado: \(id.uuidString)."
+            return english ? "The JSON contains text with no assigned group: \(id.uuidString)." : "El JSON tiene texto sin grupo asignado: \(id.uuidString)."
         case .missingPinboard(let id):
-            return "El JSON referencia un grupo inexistente: \(id.uuidString)."
+            return english ? "The JSON references a missing group: \(id.uuidString)." : "El JSON referencia un grupo inexistente: \(id.uuidString)."
         case .unsupportedItemKind(let kind):
-            return "El JSON solo admite textos agrupados. Item no soportado: \(kind.rawValue)."
+            return english ? "The JSON only supports grouped text. Unsupported item: \(kind.rawValue)." : "El JSON solo admite textos agrupados. Item no soportado: \(kind.rawValue)."
         case .invalidArchive:
-            return "El archivo no cumple estructura válida de respaldo Paste-vlv."
+            return english ? "The file does not match a valid Paste-vlv backup structure." : "El archivo no cumple estructura válida de respaldo Paste-vlv."
         }
     }
 }

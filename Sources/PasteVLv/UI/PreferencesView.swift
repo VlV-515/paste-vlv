@@ -9,15 +9,15 @@ struct PreferencesView: View {
         TabView {
             GeneralPreferencesView(appState: appState)
                 .tabItem {
-                    Label("General", systemImage: "switch.2")
+                    Label(AppCopy(language: appState.appLanguage).general, systemImage: "switch.2")
                 }
 
             ShortcutsPreferencesView(appState: appState)
                 .tabItem {
-                    Label("Atajos", systemImage: "command")
+                    Label(AppCopy(language: appState.appLanguage).shortcuts, systemImage: "command")
                 }
         }
-        .frame(width: 620, height: 420)
+        .frame(width: 620, height: 460)
     }
 }
 
@@ -25,29 +25,40 @@ private struct GeneralPreferencesView: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
+        let copy = AppCopy(language: appState.appLanguage)
         VStack(alignment: .leading, spacing: 18) {
-            SettingsRow(title: "Arranque:") {
-                Toggle("Ejecutar \(AppBranding.displayName) al arranque del sistema", isOn: $appState.launchAtLoginEnabled)
+            SettingsRow(title: copy.languageLabel) {
+                Picker("", selection: $appState.appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text("\(language.flag) \(language.pickerTitle)").tag(language)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 180, alignment: .leading)
             }
 
-            SettingsRow(title: "Integración:") {
+            SettingsRow(title: copy.launch) {
+                Toggle(copy.launchAtLogin, isOn: $appState.launchAtLoginEnabled)
+            }
+
+            SettingsRow(title: copy.integration) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Activar Direct Paste", isOn: $appState.directPasteEnabled)
-                    Toggle("Pegar siempre como texto plano", isOn: $appState.pastePlainTextByDefault)
+                    Toggle(copy.enableDirectPaste, isOn: $appState.directPasteEnabled)
+                    Toggle(copy.pastePlainText, isOn: $appState.pastePlainTextByDefault)
                 }
             }
 
-            SettingsRow(title: "Otros:") {
+            SettingsRow(title: copy.other) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Activar efectos de sonido", isOn: $appState.soundEffectsEnabled)
-                    Toggle("Mostrar icono de \(AppBranding.displayName) en barra de menú", isOn: $appState.showMenuBarIcon)
+                    Toggle(copy.enableSounds, isOn: $appState.soundEffectsEnabled)
+                    Toggle(copy.showMenuBarIcon, isOn: $appState.showMenuBarIcon)
                 }
             }
 
-            SettingsRow(title: "Capacidad historial:") {
+            SettingsRow(title: copy.historyRetention) {
                 Picker("", selection: $appState.retentionPolicy) {
                     ForEach(RetentionPolicy.allCases) { policy in
-                        Text(policy.shortTitle).tag(policy)
+                        Text(copy.retentionTitle(for: policy)).tag(policy)
                     }
                 }
                 .labelsHidden()
@@ -57,18 +68,18 @@ private struct GeneralPreferencesView: View {
 
             HStack {
                 Spacer()
-                Button("Limpiar historial del portapapeles") {
+                Button(copy.clearHistory) {
                     appState.clearHistory()
                 }
                 Spacer()
             }
 
-            SettingsRow(title: "Respaldo JSON:") {
+            SettingsRow(title: copy.jsonBackup) {
                 HStack(spacing: 10) {
-                    Button("Exportar grupos...") {
+                    Button(copy.exportGroups) {
                         appState.exportHistoryInteractively()
                     }
-                    Button("Importar grupos...") {
+                    Button(copy.importGroups) {
                         appState.importHistoryInteractively()
                     }
                 }
@@ -87,10 +98,11 @@ private struct ShortcutsPreferencesView: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
+        let copy = AppCopy(language: appState.appLanguage)
         VStack(alignment: .leading, spacing: 16) {
-            SettingsRow(title: "Activar Paste:") {
+            SettingsRow(title: copy.activatePaste) {
                 HStack(spacing: 8) {
-                    ShortcutRecorder(shortcut: $appState.openShortcut)
+                    ShortcutRecorder(shortcut: $appState.openShortcut, language: appState.appLanguage)
                         .frame(width: 160, height: 28)
 
                     Button {
@@ -104,21 +116,21 @@ private struct ShortcutsPreferencesView: View {
                 .frame(width: 196, alignment: .leading)
             }
 
-            SettingsRow(title: "Mostrar siguiente Pinboard:") {
-                StaticShortcutField(title: "None")
+            SettingsRow(title: copy.nextPinboard) {
+                StaticShortcutField(title: copy.none)
                     .frame(width: 160)
                     .frame(width: 196, alignment: .leading)
             }
 
-            SettingsRow(title: "Mostrar Pinboard anterior:") {
-                StaticShortcutField(title: "None")
+            SettingsRow(title: copy.previousPinboard) {
+                StaticShortcutField(title: copy.none)
                     .frame(width: 160)
                     .frame(width: 196, alignment: .leading)
             }
 
-            SettingsRow(title: "Pegado rápido:") {
+            SettingsRow(title: copy.quickPaste) {
                 HStack(spacing: 8) {
-                    StaticShortcutField(title: "⌘ Command")
+                    StaticShortcutField(title: copy.command)
                         .frame(width: 126)
                     Text("+ 1..9")
                         .font(.system(size: 13, weight: .semibold))
@@ -127,8 +139,8 @@ private struct ShortcutsPreferencesView: View {
                 .frame(width: 196, alignment: .leading)
             }
 
-            SettingsRow(title: "Modo texto plano:") {
-                StaticShortcutField(title: "⇧ Shift")
+            SettingsRow(title: copy.plainTextMode) {
+                StaticShortcutField(title: copy.shift)
                     .frame(width: 126)
                     .frame(width: 196, alignment: .leading)
             }
@@ -180,21 +192,25 @@ private struct StaticShortcutField: View {
 
 private struct ShortcutRecorder: NSViewRepresentable {
     @Binding var shortcut: HotKeyShortcut
+    let language: AppLanguage
 
     func makeNSView(context: Context) -> ShortcutCaptureView {
         let view = ShortcutCaptureView()
         view.onShortcut = { shortcut = $0 }
         view.shortcut = shortcut
+        view.language = language
         return view
     }
 
     func updateNSView(_ nsView: ShortcutCaptureView, context: Context) {
         nsView.shortcut = shortcut
+        nsView.language = language
     }
 }
 
 private final class ShortcutCaptureView: NSView {
     var onShortcut: ((HotKeyShortcut) -> Void)?
+    var language: AppLanguage = .english
 
     var shortcut: HotKeyShortcut = .defaultOpen {
         didSet {
@@ -254,7 +270,7 @@ private final class ShortcutCaptureView: NSView {
         let modifiers = event.modifierFlags.carbonHotKeyModifiers
         guard modifiers != 0 else { return }
 
-        let keyName = event.displayKeyName
+        let keyName = event.displayKeyName(language: language)
         let displayName = event.modifierFlags.shortcutPrefix + keyName
         onShortcut?(
             HotKeyShortcut(
@@ -263,18 +279,6 @@ private final class ShortcutCaptureView: NSView {
                 displayName: displayName
             )
         )
-    }
-}
-
-private extension RetentionPolicy {
-    var shortTitle: String {
-        switch self {
-        case .oneDay: return "Día"
-        case .oneWeek: return "Semana"
-        case .oneMonth: return "Mes"
-        case .oneYear: return "Año"
-        case .forever: return "Sin límite"
-        }
     }
 }
 
@@ -299,13 +303,13 @@ private extension NSEvent.ModifierFlags {
 }
 
 private extension NSEvent {
-    var displayKeyName: String {
+    func displayKeyName(language: AppLanguage) -> String {
         if keyCode == UInt16(kVK_ANSI_Semicolon) {
             return modifierFlags.contains(.shift) ? "Ñ" : "ñ"
         }
 
         if keyCode == UInt16(kVK_Space) {
-            return "Space"
+            return language == .english ? "Space" : "Espacio"
         }
 
         let value = charactersIgnoringModifiers ?? characters ?? ""

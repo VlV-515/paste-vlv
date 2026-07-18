@@ -51,6 +51,10 @@ final class AppState: ObservableObject {
         didSet { settings.openShortcut = openShortcut }
     }
 
+    @Published var appLanguage: AppLanguage {
+        didSet { settings.appLanguage = appLanguage }
+    }
+
     private let repository: ClipboardRepository
     let settings: AppSettings
 
@@ -65,10 +69,11 @@ final class AppState: ObservableObject {
         self.isCapturePaused = settings.isCapturePaused
         self.retentionPolicy = settings.retentionPolicy
         self.openShortcut = settings.openShortcut
+        self.appLanguage = settings.appLanguage
     }
 
     func bootstrap() {
-        repository.bootstrapPinboardsIfNeeded()
+        repository.bootstrapPinboardsIfNeeded(language: appLanguage)
         refreshAll(resetSelection: true)
         cleanupExpiredItems()
     }
@@ -186,8 +191,9 @@ final class AppState: ObservableObject {
 
     func exportHistoryInteractively() {
         let panel = NSSavePanel()
-        panel.title = "Exportar grupos"
-        panel.message = "Guardar grupos y textos agrupados en un respaldo JSON. Historial general e imágenes quedan fuera."
+        let copy = AppCopy(language: appLanguage)
+        panel.title = copy.exportTitle
+        panel.message = copy.exportMessage
         panel.canCreateDirectories = true
         panel.allowedContentTypes = [.json]
         panel.nameFieldStringValue = defaultExportFilename()
@@ -197,13 +203,13 @@ final class AppState: ObservableObject {
         do {
             let summary = try repository.exportHistory(to: url)
             presentAlert(
-                title: "Exportación completada",
-                message: "\(summary.message)\n\nArchivo:\n\(url.path)"
+                title: copy.exportComplete,
+                message: "\(summary.message(language: appLanguage))\n\n\(copy.file):\n\(url.path)"
             )
         } catch {
             presentAlert(
-                title: "No se pudo exportar",
-                message: error.localizedDescription,
+                title: copy.exportFailed,
+                message: localizedTransferError(error),
                 style: .warning
             )
         }
@@ -211,8 +217,9 @@ final class AppState: ObservableObject {
 
     func importHistoryInteractively() {
         let panel = NSOpenPanel()
-        panel.title = "Importar grupos"
-        panel.message = "Selecciona un respaldo JSON de grupos con textos agrupados exportado desde Paste-vlv."
+        let copy = AppCopy(language: appLanguage)
+        panel.title = copy.importTitle
+        panel.message = copy.importMessage
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.json]
@@ -223,13 +230,13 @@ final class AppState: ObservableObject {
             let summary = try repository.importHistory(from: url)
             refreshAll(resetSelection: true)
             presentAlert(
-                title: "Importación completada",
-                message: summary.message
+                title: copy.importComplete,
+                message: summary.message(language: appLanguage)
             )
         } catch {
             presentAlert(
-                title: "No se pudo importar",
-                message: error.localizedDescription,
+                title: copy.importFailed,
+                message: localizedTransferError(error),
                 style: .warning
             )
         }
@@ -269,5 +276,12 @@ final class AppState: ObservableObject {
         alert.informativeText = message
         alert.addButton(withTitle: "OK")
         alert.runModal()
+    }
+
+    private func localizedTransferError(_ error: Error) -> String {
+        if let error = error as? ClipboardTransferError {
+            return error.message(language: appLanguage)
+        }
+        return error.localizedDescription
     }
 }

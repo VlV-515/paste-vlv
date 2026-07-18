@@ -51,18 +51,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.action = #selector(togglePanelFromStatusItem)
         statusItem.button?.target = self
 
-        let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Mostrar \(AppBranding.displayName)", action: #selector(showPanelFromMenu), keyEquivalent: "v"))
-        menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(showPreferencesFromMenu), keyEquivalent: ","))
-        menu.addItem(NSMenuItem(title: "Exportar grupos...", action: #selector(exportHistoryFromMenu), keyEquivalent: "e"))
-        menu.addItem(NSMenuItem(title: "Importar grupos...", action: #selector(importHistoryFromMenu), keyEquivalent: "i"))
-        menu.addItem(NSMenuItem(title: "Pause Capture", action: #selector(toggleCapturePause), keyEquivalent: "p"))
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q"))
-        statusItem.menu = menu
         statusItem.isVisible = settings.showMenuBarIcon
 
         self.statusItem = statusItem
+        updateStatusMenu()
+    }
+
+    private func updateStatusMenu() {
+        let copy = AppCopy(language: settings.appLanguage)
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: copy.showApp, action: #selector(showPanelFromMenu), keyEquivalent: "v"))
+        menu.addItem(NSMenuItem(title: copy.preferences, action: #selector(showPreferencesFromMenu), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: copy.exportGroups, action: #selector(exportHistoryFromMenu), keyEquivalent: "e"))
+        menu.addItem(NSMenuItem(title: copy.importGroups, action: #selector(importHistoryFromMenu), keyEquivalent: "i"))
+        menu.addItem(NSMenuItem(title: settings.isCapturePaused ? copy.resumeCapture : copy.pauseCapture, action: #selector(toggleCapturePause), keyEquivalent: "p"))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: copy.quit, action: #selector(quit), keyEquivalent: "q"))
+        statusItem?.menu = menu
     }
 
     private func configurePanel() {
@@ -145,6 +150,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyLaunchAtLoginSetting()
             }
             .store(in: &cancellables)
+
+        settings.$appLanguage
+            .dropFirst()
+            .sink { [weak self] language in
+                self?.updateStatusMenu()
+                self?.preferencesWindow?.title = AppCopy(language: language).preferences
+            }
+            .store(in: &cancellables)
+
+        settings.$isCapturePaused
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.updateStatusMenu()
+            }
+            .store(in: &cancellables)
     }
 
     private func togglePanel() {
@@ -170,12 +190,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPreferences() {
         if preferencesWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 620, height: 420),
+                contentRect: NSRect(x: 0, y: 0, width: 620, height: 460),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
             )
-            window.title = "Preferencias"
+            window.title = AppCopy(language: settings.appLanguage).preferences
             window.isReleasedWhenClosed = false
             window.center()
             window.contentViewController = NSHostingController(rootView: PreferencesView(appState: appState))

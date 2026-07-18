@@ -10,16 +10,6 @@ enum RetentionPolicy: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
-        switch self {
-        case .oneDay: return "1 day"
-        case .oneWeek: return "1 week"
-        case .oneMonth: return "1 month"
-        case .oneYear: return "1 year"
-        case .forever: return "Forever"
-        }
-    }
-
     var cutoffDate: Date? {
         let calendar = Calendar.current
         switch self {
@@ -86,6 +76,10 @@ final class AppSettings: ObservableObject {
         didSet { saveShortcut(openShortcut, key: Keys.openShortcut) }
     }
 
+    @Published var appLanguage: AppLanguage {
+        didSet { defaults.set(appLanguage.rawValue, forKey: Keys.appLanguage) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -101,6 +95,7 @@ final class AppSettings: ObservableObject {
         let excluded = defaults.stringArray(forKey: Keys.excludedBundleIDs) ?? []
         self.excludedBundleIDs = Set(excluded)
         self.openShortcut = Self.loadShortcut(defaults: defaults, key: Keys.openShortcut) ?? .defaultOpen
+        self.appLanguage = AppLanguage(rawValue: defaults.string(forKey: Keys.appLanguage) ?? "") ?? .english
     }
 
     func toggleExcluded(bundleID: String) {
@@ -131,5 +126,6 @@ final class AppSettings: ObservableObject {
         static let retentionPolicy = "retentionPolicy"
         static let excludedBundleIDs = "excludedBundleIDs"
         static let openShortcut = "openShortcut"
+        static let appLanguage = "appLanguage"
     }
 }

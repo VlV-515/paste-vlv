@@ -31,3 +31,5 @@ privacy-sensitive clipboard data.
   intentionally disabled.
 - Import/export of groups uses versioned JSON backups with grouped texts only.
 - `scripts/package-app.sh` creates a local unsigned `.app` bundle in `dist/`.
+- Interface language defaults to English and can be changed to Spanish in
+  Preferences; the choice stays local to the app.

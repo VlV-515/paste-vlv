@@ -12,6 +12,8 @@
   ·
   <a href="#using-paste-vlv">How it works</a>
   ·
+  <a href="#language">Languages</a>
+  ·
   <a href="#backup-and-restore">Backups</a>
 </p>
 
@@ -35,6 +37,7 @@ No account. No subscription. No server to sign into. Your clipboard history stay
 - **Make useful things permanent.** Turn any item into a favorite, pin it, or send it to a color-coded pinboard.
 - **Paste your way.** Paste directly into the app you were using, or copy the item back to the clipboard. Paste text as plain text when formatting would get in the way.
 - **Stay in control.** Pause capture, choose how long history is kept, clear it when needed, and keep data on-device.
+- **Use your language.** Paste-vlv starts in English and can switch its interface to Spanish from Preferences.
 - **Move your saved text.** Export pinboards as a portable, versioned JSON backup and restore them later.
 
 ## At a glance
@@ -139,6 +142,7 @@ You can rename a pinboard, change its color, or delete it from its contextual me
 
 Preferences let you make Paste-vlv feel at home on your Mac:
 
+- Choose interface language: **🇺🇸 English** (default) or **🇲🇽 Español**
 - Launch at login
 - Enable or disable Direct Paste
 - Paste as plain text by default
@@ -152,6 +156,10 @@ Preferences let you make Paste-vlv feel at home on your Mac:
 ![General preferences: Direct Paste, retention, and JSON backups](docs/images/preferences-general.png)
 
 ![Shortcut preferences](docs/images/preferences-shortcuts.png)
+
+### Language
+
+Paste-vlv opens in English by default. Go to **Preferences > General > Language** and choose **🇺🇸 English** or **🇲🇽 Español**. The selection is saved locally and immediately updates the panel, Preferences, menu-bar menu, dialogs, and newly created starter pinboards. Existing pinboard names are your content and are never renamed when you change languages.
 
 ## Backup and restore
 

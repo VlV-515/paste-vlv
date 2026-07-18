@@ -9,7 +9,7 @@ final class ClipboardRepository {
         self.context = context
     }
 
-    func bootstrapPinboardsIfNeeded() {
+    func bootstrapPinboardsIfNeeded(language: AppLanguage) {
         let request = NSFetchRequest<PinboardEntity>(entityName: "PinboardEntity")
         request.fetchLimit = 1
 
@@ -18,11 +18,11 @@ final class ClipboardRepository {
                 return
             }
 
-            [
-                ("General", "#2563EB"),
-                ("Links", "#059669"),
-                ("Images", "#D97706")
-            ].enumerated().forEach { index, data in
+            let initialPinboards = language == .english
+                ? [("General", "#2563EB"), ("Links", "#059669"), ("Images", "#D97706")]
+                : [("General", "#2563EB"), ("Enlaces", "#059669"), ("Imágenes", "#D97706")]
+
+            initialPinboards.enumerated().forEach { index, data in
                 let pinboard = PinboardEntity(context: context)
                 pinboard.id = UUID()
                 pinboard.name = data.0
