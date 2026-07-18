@@ -1,114 +1,208 @@
 # Paste-vlv
 
-Private macOS clipboard manager inspired by Paste. It is native Swift/AppKit/
-SwiftUI and targets Mac only.
+<p align="center">
+  <strong>A fast, local-first clipboard manager for macOS.</strong><br>
+  Keep what you copy. Find it instantly. Paste it where you need it.
+</p>
 
-## Commands
+<p align="center">
+  <a href="https://github.com/VlV-515/paste-vlv">View source</a>
+  ·
+  <a href="#get-paste-vlv">Get it</a>
+  ·
+  <a href="#using-paste-vlv">How it works</a>
+  ·
+  <a href="#backup-and-restore">Backups</a>
+</p>
 
-- `swift build`: compiles the app in debug mode. Use it to validate source
-  changes and produce `.build/debug/Paste-vlv`.
-- `swift run Paste-vlv`: builds if needed and launches the latest local code
-  directly from SwiftPM.
-- `./scripts/package-app.sh`: creates `dist/Paste-vlv.app`, runs a release
-  build internally, writes the app bundle metadata, and ad-hoc signs the app.
-- `open dist/Paste-vlv.app`: launches the packaged app after it exists.
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-13%2B-000000?logo=apple&logoColor=white" alt="macOS 13 or later">
+  <img src="https://img.shields.io/badge/Swift-5.9%2B-F05138?logo=swift&logoColor=white" alt="Swift 5.9 or later">
+  <img src="https://img.shields.io/badge/Cloud%20sync-Local%20only-2D7FF9" alt="Local-only storage">
+  <img src="https://img.shields.io/badge/Price-Free-2DA44E" alt="Free to use">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-8A2BE2" alt="MIT License"></a>
+</p>
 
-Full command reference: [docs/commands.md](docs/commands.md)
+![Paste-vlv showing clipboard history, pinboards, text, links, and image cards](docs/images/history-and-pinboards.png)
 
-## Features
+Paste-vlv is a native Mac clipboard manager for people who copy all day. It lives in your menu bar, remembers copied text, links, images, and files locally, then brings them back in a wide, keyboard-friendly panel when you need them.
 
-- Clipboard history for text, links, images, and files.
-- Configurable global shortcut, default `Shift-Cmd-Ñ`.
-- Menu bar resident app with a full-width floating bottom panel.
-- Paste-style horizontal history with pinboards/groups, colored cards, drag and
-  drop assignment, rename, color, and delete actions.
-- Search by content, URL, source app, and preview text.
-- Opening the panel focuses search immediately and preselects the first result.
-- Keyboard navigation across history cards with `Left Arrow` and `Right Arrow`.
-- `Forward Delete` removes the selected history card.
-- Quick paste with `Cmd-1` through `Cmd-9`.
-- Double-click any card to paste it.
-- `Return` pastes the selected card and `Shift-Return` pastes it as plain text.
-- Clicking another app or window hides the clipboard panel.
-- Plain-text paste with the text button or the preferences default.
-- Direct paste restores focus to the app that was active before opening Paste-vlv.
-- Pause/resume clipboard capture.
-- Export/import of pinboards through versioned JSON backups limited to grouped texts.
-- Preferences window with General and Shortcuts tabs.
-- Per-app privacy toggle for the current foreground app.
-- Retention policies: 1 day, 1 week, 1 month, 1 year, forever.
-- Local Core Data persistence through `NSPersistentCloudKitContainer`, ready for
-  future CloudKit configuration.
+No account. No subscription. No server to sign into. Your clipboard history stays on your Mac.
 
-## Run During Development
+## Why Paste-vlv?
+
+- **Keep your flow.** Open history from a global shortcut or the menu bar, search, choose, and paste without hunting through old windows.
+- **Make useful things permanent.** Turn any item into a favorite, pin it, or send it to a color-coded pinboard.
+- **Paste your way.** Paste directly into the app you were using, or copy the item back to the clipboard. Paste text as plain text when formatting would get in the way.
+- **Stay in control.** Pause capture, choose how long history is kept, clear it when needed, and keep data on-device.
+- **Move your saved text.** Export pinboards as a portable, versioned JSON backup and restore them later.
+
+## At a glance
+
+| Paste-vlv does | Paste-vlv deliberately does not do |
+| --- | --- |
+| Captures text, links, images, and files from the macOS clipboard | Send clipboard data to a server or enable cloud sync today |
+| Stores history locally in a Core Data store | Include a team workspace, shared pinboards, or collaboration features |
+| Gives you pinboards, favorites, pins, search, and quick paste | Replace a password manager or promise secure handling of secrets you copy |
+| Exports grouped text pinboards to JSON | Export ungrouped history, links, images, or files to JSON |
+| Runs as a native macOS menu-bar utility | Support iPhone, iPad, Windows, Linux, or web browsers |
+
+> **Clipboard privacy note:** clipboard managers can see what you copy. Avoid copying passwords, recovery codes, and other sensitive secrets. Paste-vlv keeps its current data locally, but it is not a password manager.
+
+## Get Paste-vlv
+
+### Requirements
+
+- macOS 13 Ventura or later
+- Swift 5.9 or later (included with current Xcode or Command Line Tools)
+
+### Download source
+
+Download the project from [GitHub](https://github.com/VlV-515/paste-vlv), or clone it:
 
 ```sh
-swift run Paste-vlv
+git clone https://github.com/VlV-515/paste-vlv.git
+cd paste-vlv
 ```
 
-The app runs as a menu bar utility. Use `Shift-Cmd-Ñ` or the menu bar icon to
-open the clipboard panel. When the panel opens, you can type to search
-immediately, move the current selection with the arrow keys, and press
-`Return` to paste the highlighted item.
+### Build an app you can open
 
-## Backup And Restore
-
-Paste-vlv can export groups to a JSON file named like
-`paste-vlv-groups-2026-07-18-14-30-00.json`.
-
-Where to find it:
-
-- Menu bar menu: `Exportar grupos...` / `Importar grupos...`
-- Panel menu: `...`
-- Preferences > General > `Respaldo JSON`
-
-What the JSON includes:
-
-- Schema version `2` and export timestamp.
-- Pinboards with IDs, names, colors, and order.
-- Only grouped `text` clipboard items, with metadata, flags, group assignment,
-  and creation date.
-
-What is intentionally omitted:
-
-- General history without group assignment.
-- Links, files, and images.
-
-Export warns about those omissions because exporting everything, especially
-images, expands the JSON file too much.
-
-Import expects the same archive structure. Invalid schema versions, duplicate
-IDs, missing group assignments, broken pinboard references, or non-text items
-are rejected.
-
-## Package A Local App
+Create a release `.app` bundle, then launch it:
 
 ```sh
 ./scripts/package-app.sh
 open dist/Paste-vlv.app
 ```
 
-The packaging script ad-hoc signs the app bundle with the stable bundle
-identifier `dev.vlv.pastevlv`, which keeps macOS Accessibility permission tied
-to the packaged app across local rebuilds.
+The script builds a release version, creates `dist/Paste-vlv.app`, writes its bundle metadata, and applies ad-hoc signing. `dist/` is generated locally and is intentionally not committed.
 
-For direct paste into other apps, macOS needs Accessibility permission:
-`System Settings > Privacy & Security > Accessibility > Paste-vlv`.
-If macOS keeps asking after Paste-vlv is already enabled, remove Paste-vlv from
-that list, add `dist/Paste-vlv.app` again, and restart the app.
+### Run from source instead
 
-## iCloud Sync Status
+For development or a quick try, run the Swift Package directly:
 
-The persistence layer already uses `NSPersistentCloudKitContainer`, but CloudKit
-sync is intentionally disabled until an Apple Developer account, Xcode project,
-iCloud container, signing team, and entitlements are configured.
+```sh
+swift run Paste-vlv
+```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the implementation shape
-and next steps.
+To confirm a checkout compiles without opening the app:
 
-## Codex Docs
+```sh
+swift build
+```
 
-Agent-facing documentation starts at [AGENTS.md](AGENTS.md). The full Codex
-init lives under `.codex/`, with rules, role prompts, and the local
-`paste-vlv-development` skill. See [docs/agent-guidance.md](docs/agent-guidance.md)
-for the map.
+## First run: enable Direct Paste
+
+Paste-vlv works as a menu-bar app. Open it with the menu-bar icon or its default global shortcut, **Shift–Command–Ñ**. The shortcut can be changed in Preferences.
+
+When **Direct Paste** is enabled, Paste-vlv returns focus to the app you were using and sends the paste action there. macOS requires Accessibility permission for this:
+
+1. Open **System Settings > Privacy & Security > Accessibility**.
+2. Enable **Paste-vlv**.
+3. If macOS keeps requesting access, remove Paste-vlv from that list, add `dist/Paste-vlv.app` again, then restart the app.
+
+Without Direct Paste, selecting an item still places it on the regular clipboard for you to paste normally.
+
+> The packaged `.app` is recommended for Direct Paste testing because macOS ties Accessibility permission to the app bundle more reliably than to a process launched with `swift run`.
+
+## Using Paste-vlv
+
+### Capture, search, and paste
+
+Copy something in any app. Paste-vlv watches the standard macOS clipboard and stores normalized text, links, images, and file references locally. Duplicate content is recognized, so copying the same thing again refreshes that item instead of flooding the history.
+
+Open the panel and start typing: search is focused automatically. Results match copied content, preview text, URLs, and the source app name.
+
+![Search immediately after opening the panel](docs/images/search-history.png)
+
+| Action | Shortcut or gesture |
+| --- | --- |
+| Open or hide Paste-vlv | Configurable global shortcut; default `Shift-Command-Ñ` |
+| Move through cards | `←` / `→` |
+| Paste selected card | `Return` |
+| Paste selected text as plain text | `Shift-Return` |
+| Quick-paste one of the first nine cards | `Command-1` through `Command-9` |
+| Paste a card with the mouse | Double-click it |
+| Delete selected card | `Forward Delete` |
+| Close the panel | Click another app/window or use the panel menu |
+
+Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, and deletion.
+
+### Organize with pinboards
+
+Pinboards are color-coded spaces for the things you want to reuse: snippets, project links, visual references, or any copied item. Create one with the `+` button, choose a name and color, then drag a card onto it or use the card’s **Move to group** menu.
+
+![Creating a color-coded pinboard](docs/images/create-pinboard.png)
+
+You can rename a pinboard, change its color, or delete it from its contextual menu. Deleting a pinboard does **not** delete its cards; it returns them to general history.
+
+### Tune the behavior
+
+Preferences let you make Paste-vlv feel at home on your Mac:
+
+- Launch at login
+- Enable or disable Direct Paste
+- Paste as plain text by default
+- Turn sound effects on or off
+- Show or hide the menu-bar icon
+- Pause or resume clipboard capture
+- Keep history for 1 day, 1 week, 1 month, 1 year, or forever
+- Clear all clipboard history
+- Change the global activation shortcut
+
+![General preferences: Direct Paste, retention, and JSON backups](docs/images/preferences-general.png)
+
+![Shortcut preferences](docs/images/preferences-shortcuts.png)
+
+## Backup and restore
+
+Paste-vlv’s backup format is intentionally focused: it preserves the reusable text you organized, without producing giant archives full of screenshots and temporary clipboard noise.
+
+### Export
+
+Use **Export groups…** from any of these places:
+
+- Menu-bar menu
+- Panel `…` menu
+- Preferences > General > JSON Backup
+
+The saved filename looks like `paste-vlv-groups-YYYY-MM-DD-HH-mm-ss.json`. It is a pretty-printed, versioned JSON archive (current schema: `2`) containing:
+
+- Pinboards: stable IDs, names, colors, order, and creation dates
+- **Grouped text items only**: text, preview and search fields, source-app metadata, favorites, pins, group assignment, dates, and content hashes
+- Export metadata: app name, bundle identifier, platform, and timestamp
+
+### What backup intentionally leaves out
+
+- General history items not assigned to a pinboard
+- Links, images, and files, even when assigned to a pinboard
+
+This keeps the JSON portable and reasonably small. The app shows an export summary with the number of omitted items so there are no surprises.
+
+### Import
+
+Choose **Import groups…** from the same menus and select a Paste-vlv JSON archive. Import validates the schema, IDs, group assignments, referenced pinboards, and item types before changing local data. Matching IDs are updated; missing ones are created. The completion message reports both counts.
+
+## Data, privacy, and sync
+
+- Clipboard items and pinboards persist locally in a Core Data SQLite store.
+- Captured images are stored locally in Application Support and referenced by the history store.
+- CloudKit is deliberately disabled. The storage layer is prepared for a future opt-in sync path, but no iCloud container, entitlements, account, or cross-Mac sync is active.
+- Capture can be paused at any time. The current implementation also has an internal per-app exclusion setting; a user-facing list for managing exclusions is not available yet.
+
+## Project notes
+
+Paste-vlv is a personal, native macOS project built with Swift Package Manager, AppKit, SwiftUI, Core Data, `NSPasteboard`, Carbon global hotkeys, and macOS accessibility APIs.
+
+Want the technical map? Read [Architecture](docs/ARCHITECTURE.md). Need the full command reference? Read [Commands](docs/commands.md).
+
+## Contributing and status
+
+This is an active personal project. Bug reports, ideas, and respectful feedback are welcome through [GitHub Issues](https://github.com/VlV-515/paste-vlv/issues).
+
+Current boundaries are intentional: Mac-only, local-only, no CloudKit sync, no shared workspaces, no OCR, and no mobile app. Those constraints keep Paste-vlv focused, fast, and private by default.
+
+## License
+
+Copyright (c) 2026 VlV.
+
+Paste-vlv is free and open source under the [MIT License](LICENSE). You may use, copy, modify, distribute, and include it in other projects under that license's terms. See [LICENSE](LICENSE) for the complete text.
