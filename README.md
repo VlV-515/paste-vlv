@@ -3,6 +3,18 @@
 Private macOS clipboard manager inspired by Paste. It is native Swift/AppKit/
 SwiftUI and targets Mac only.
 
+## Commands
+
+- `swift build`: compiles the app in debug mode. Use it to validate source
+  changes and produce `.build/debug/Paste-vlv`.
+- `swift run Paste-vlv`: builds if needed and launches the latest local code
+  directly from SwiftPM.
+- `./scripts/package-app.sh`: creates `dist/Paste-vlv.app`, runs a release
+  build internally, writes the app bundle metadata, and ad-hoc signs the app.
+- `open dist/Paste-vlv.app`: launches the packaged app after it exists.
+
+Full command reference: [docs/commands.md](docs/commands.md)
+
 ## Features
 
 - Clipboard history for text, links, images, and files.

@@ -8,6 +8,7 @@ without rediscovering the project from scratch.
 - `AGENTS.md`: main instructions for every agent.
 - `.codex/README.md`: map of the Codex docs.
 - `.codex/project-brief.md`: product intent and boundaries.
+- `docs/commands.md`: shared command reference and when to use each command.
 - `.codex/rules/`: durable rules for code, macOS behavior, Git, and validation.
 - `.codex/skills/paste-vlv-development/`: reusable implementation playbook.
 - `.codex/agents/`: role prompts for focused implementation, review, and docs.

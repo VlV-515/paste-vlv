@@ -31,7 +31,7 @@
 
 ```sh
 swift build
-swift run PasteVLv
+swift run Paste-vlv
 ./scripts/package-app.sh
-open dist/PasteVLv.app
+open dist/Paste-vlv.app
 ```

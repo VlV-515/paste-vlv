@@ -8,6 +8,7 @@ This directory contains repo-native guidance for Codex and other AI agents.
 - `rules/`: durable project rules that should be read before edits.
 - `skills/`: reusable playbooks for repeated work.
 - `agents/`: role prompts for focused implementation or review passes.
+- `../docs/commands.md`: shared command reference for humans and agents.
 
 ## Recommended Load Order
 

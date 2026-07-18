@@ -24,15 +24,18 @@ Treat it as a native macOS utility, not a web app.
 
 ## Commands
 
-```sh
-swift build
-swift run Paste-vlv
-./scripts/package-app.sh
-open dist/Paste-vlv.app
-```
+- `swift build`: compile debug build and validate source changes.
+- `swift run Paste-vlv`: run latest local code directly from SwiftPM.
+- `./scripts/package-app.sh`: create `dist/Paste-vlv.app` with a release build,
+  bundle metadata, and ad-hoc signing.
+- `open dist/Paste-vlv.app`: launch packaged app only when the user explicitly
+  asks to open it.
 
-Run `swift build` before committing source changes. Run `./scripts/package-app.sh`
-when changes affect launch behavior, Info.plist packaging, or release shape.
+Full command reference: `docs/commands.md`
+
+Run `swift build` before committing source changes. Run
+`./scripts/package-app.sh` when changes affect launch behavior, Info.plist
+packaging, or release shape.
 
 ## Git
 
