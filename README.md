@@ -25,9 +25,11 @@ Full command reference: [docs/commands.md](docs/commands.md)
 - Search by content, URL, source app, and preview text.
 - Opening the panel focuses search immediately and preselects the first result.
 - Keyboard navigation across history cards with `Left Arrow` and `Right Arrow`.
+- `Forward Delete` removes the selected history card.
 - Quick paste with `Cmd-1` through `Cmd-9`.
 - Double-click any card to paste it.
 - `Return` pastes the selected card and `Shift-Return` pastes it as plain text.
+- Clicking another app or window hides the clipboard panel.
 - Plain-text paste with the text button or the preferences default.
 - Direct paste restores focus to the app that was active before opening Paste-vlv.
 - Pause/resume clipboard capture.

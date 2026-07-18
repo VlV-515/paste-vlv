@@ -294,6 +294,10 @@ struct ClipboardPanelView: View {
             }
             onPaste(selectedItem, modifiers == [.shift])
             return true
+        case 117 where modifiers.isEmpty:
+            guard let selectedItem = appState.selectedItem else { return false }
+            appState.delete(itemID: selectedItem.id)
+            return true
         default:
             return false
         }

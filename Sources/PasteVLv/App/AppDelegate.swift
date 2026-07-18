@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: NSPanel?
     private var preferencesWindow: NSWindow?
     private var pasteTargetApplication: NSRunningApplication?
+    private var outsidePanelClickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -24,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.bootstrap()
         configureStatusItem()
         configurePanel()
+        configureOutsidePanelClickMonitor()
         configureClipboardMonitor()
         configureHotKey()
         configureSettingsObservers()
@@ -31,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        if let outsidePanelClickMonitor {
+            NSEvent.removeMonitor(outsidePanelClickMonitor)
+        }
         clipboardMonitor.stop()
         hotKeyManager.unregister()
         PersistenceController.shared.saveIfNeeded()
@@ -90,6 +95,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.contentViewController = hostingController
         self.panel = panel
+    }
+
+    private func configureOutsidePanelClickMonitor() {
+        outsidePanelClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard self?.panel?.isVisible == true else { return }
+                self?.hidePanel()
+            }
+        }
     }
 
     private func configureClipboardMonitor() {
