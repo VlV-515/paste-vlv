@@ -75,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let hostingController = NSHostingController(rootView: view)
         let panel = ClipboardOverlayPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 1180, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 1180, height: 392),
             styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -208,7 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func positionPanel() {
         guard let panel else { return }
         let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
-        let height = min(screenFrame.height - 90, 380)
+        let height = min(screenFrame.height - 90, 412)
         panel.setFrame(
             NSRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: height),
             display: true

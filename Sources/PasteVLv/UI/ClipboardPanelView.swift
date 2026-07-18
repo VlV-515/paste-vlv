@@ -31,7 +31,7 @@ struct ClipboardPanelView: View {
             topBar
             content
         }
-        .frame(minWidth: 980, idealWidth: 1180, minHeight: 330, idealHeight: 360)
+        .frame(minWidth: 980, idealWidth: 1180, minHeight: 360, idealHeight: 392)
         .background(panelBackground)
         .sheet(isPresented: $isAddingPinboard) {
             PinboardEditorView(
@@ -186,7 +186,8 @@ struct ClipboardPanelView: View {
                             }
                         }
                         .padding(.horizontal, 24)
-                        .padding(.bottom, 18)
+                        .padding(.top, 2)
+                        .padding(.bottom, 12)
                     }
                     .onAppear {
                         scrollSelection(into: proxy)
@@ -335,24 +336,26 @@ private struct ClipboardCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(
+                .strokeBorder(
                     isSelected ? selectedCardOutline : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9),
-                    lineWidth: isSelected ? 3 : (item.pinboardID == nil ? 1 : 3)
+                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 3)
                 )
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(isSelected ? Color.black.opacity(0.30) : Color.clear, lineWidth: 1)
+                .strokeBorder(isSelected ? Color.black.opacity(0.30) : Color.clear, lineWidth: 1)
                 .padding(4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .stroke(selectedCardOutline.opacity(isSelected ? 0.52 : 0), lineWidth: 2)
-                .padding(-3)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(selectedCardOutline.opacity(isSelected ? 1 : 0))
+                .frame(height: 4)
+                .padding(.horizontal, 4)
+                .padding(.bottom, 4),
+            alignment: .bottom
         )
-        .shadow(color: isSelected ? selectedCardOutline.opacity(0.22) : .black.opacity(0.22), radius: isSelected ? 10 : 8, y: 3)
-        .shadow(color: .black.opacity(isSelected ? 0.30 : 0.22), radius: isSelected ? 14 : 8, y: 4)
-        .scaleEffect(isSelected ? 1.01 : 1)
+        .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.22), radius: isSelected ? 8 : 8, y: 2)
+        .shadow(color: .black.opacity(isSelected ? 0.24 : 0.22), radius: isSelected ? 10 : 8, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .onTapGesture {
             onSelect()
