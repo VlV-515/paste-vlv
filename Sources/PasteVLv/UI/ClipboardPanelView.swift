@@ -127,7 +127,11 @@ struct ClipboardPanelView: View {
                                     Button {
                                         appState.update(pinboardID: pinboard.id, name: pinboard.name, colorHex: colorHex)
                                     } label: {
-                                        Label(colorName(colorHex), systemImage: pinboard.colorHex == colorHex ? "checkmark.circle.fill" : "circle.fill")
+                                        PinboardColorMenuLabel(
+                                            name: colorName(colorHex),
+                                            colorHex: colorHex,
+                                            isSelected: pinboard.colorHex == colorHex
+                                        )
                                     }
                                 }
                             }
@@ -605,6 +609,30 @@ private func colorName(_ hex: String) -> String {
     case "#38BDF8": return "Azul"
     case "#C084FC": return "Morado"
     default: return "Gris"
+    }
+}
+
+private struct PinboardColorMenuLabel: View {
+    let name: String
+    let colorHex: String
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color(hex: colorHex))
+                .frame(width: 10, height: 10)
+                .overlay {
+                    Circle()
+                        .stroke(Color.white.opacity(colorHex == "#FACC15" ? 0.45 : 0.18), lineWidth: 0.75)
+                }
+
+            Text(name)
+
+            if isSelected {
+                Image(systemName: "checkmark")
+            }
+        }
     }
 }
 
