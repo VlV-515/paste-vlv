@@ -17,12 +17,12 @@ final class PasteController {
     ) {
         placeOnPasteboard(item, asPlainText: asPlainText)
 
-        guard canSendDirectPaste() else { return }
+        requestAccessibilityPromptIfNeeded()
 
         targetApplication?.activate(options: [.activateIgnoringOtherApps, .activateAllWindows])
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            self.sendCommandV()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
+            self.sendCommandV(to: targetApplication)
         }
     }
 
@@ -57,17 +57,15 @@ final class PasteController {
         }
     }
 
-    private func canSendDirectPaste() -> Bool {
-        guard !AXIsProcessTrusted() else { return true }
-        guard !didRequestAccessibilityPrompt else { return false }
+    private func requestAccessibilityPromptIfNeeded() {
+        guard !AXIsProcessTrusted(), !didRequestAccessibilityPrompt else { return }
 
         didRequestAccessibilityPrompt = true
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
-        return false
     }
 
-    private func sendCommandV() {
+    private func sendCommandV(to targetApplication: NSRunningApplication?) {
         let source = CGEventSource(stateID: .hidSystemState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: UInt16(kVK_ANSI_V), keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: UInt16(kVK_ANSI_V), keyDown: false)
@@ -75,7 +73,12 @@ final class PasteController {
         keyDown?.flags = .maskCommand
         keyUp?.flags = .maskCommand
 
-        keyDown?.post(tap: .cghidEventTap)
-        keyUp?.post(tap: .cghidEventTap)
+        if let processIdentifier = targetApplication?.processIdentifier {
+            keyDown?.postToPid(processIdentifier)
+            keyUp?.postToPid(processIdentifier)
+        } else {
+            keyDown?.post(tap: .cghidEventTap)
+            keyUp?.post(tap: .cghidEventTap)
+        }
     }
 }

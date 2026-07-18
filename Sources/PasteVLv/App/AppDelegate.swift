@@ -147,7 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPreferences() {
         if preferencesWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 560, height: 330),
+                contentRect: NSRect(x: 0, y: 0, width: 620, height: 350),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false

@@ -17,7 +17,7 @@ struct PreferencesView: View {
                     Label("Atajos", systemImage: "command")
                 }
         }
-        .frame(width: 560, height: 330)
+        .frame(width: 620, height: 350)
     }
 }
 
@@ -76,11 +76,11 @@ private struct ShortcutsPreferencesView: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             SettingsRow(title: "Activar Paste:") {
                 HStack(spacing: 8) {
                     ShortcutRecorder(shortcut: $appState.openShortcut)
-                        .frame(width: 142, height: 28)
+                        .frame(width: 160, height: 28)
 
                     Button {
                         appState.openShortcut = .defaultOpen
@@ -88,34 +88,44 @@ private struct ShortcutsPreferencesView: View {
                         Image(systemName: "xmark")
                     }
                     .buttonStyle(.borderless)
+                    .frame(width: 28, height: 28)
                 }
+                .frame(width: 196, alignment: .leading)
             }
 
             SettingsRow(title: "Mostrar siguiente Pinboard:") {
                 StaticShortcutField(title: "None")
+                    .frame(width: 160)
+                    .frame(width: 196, alignment: .leading)
             }
 
             SettingsRow(title: "Mostrar Pinboard anterior:") {
                 StaticShortcutField(title: "None")
+                    .frame(width: 160)
+                    .frame(width: 196, alignment: .leading)
             }
 
             SettingsRow(title: "Pegado rápido:") {
                 HStack(spacing: 8) {
                     StaticShortcutField(title: "⌘ Command")
-                        .frame(width: 118)
+                        .frame(width: 126)
                     Text("+ 1..9")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.primary)
                 }
+                .frame(width: 196, alignment: .leading)
             }
 
             SettingsRow(title: "Modo texto plano:") {
                 StaticShortcutField(title: "⇧ Shift")
-                    .frame(width: 92)
+                    .frame(width: 126)
+                    .frame(width: 196, alignment: .leading)
             }
 
             Spacer()
         }
-        .padding(.top, 22)
-        .padding(.horizontal, 86)
+        .padding(.top, 26)
+        .padding(.horizontal, 54)
         .padding(.bottom, 18)
     }
 }
@@ -125,10 +135,16 @@ private struct SettingsRow<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
             Text(title)
-                .frame(width: 136, alignment: .trailing)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 190, alignment: .trailing)
             content
+                .frame(minWidth: 220, alignment: .leading)
         }
     }
 }
@@ -138,8 +154,10 @@ private struct StaticShortcutField: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 13))
-            .frame(width: 142, height: 26)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.primary)
+            .frame(height: 26)
+            .frame(maxWidth: .infinity)
             .background(Color(nsColor: .textBackgroundColor))
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
@@ -185,6 +203,7 @@ private final class ShortcutCaptureView: NSView {
 
         label.alignment = .center
         label.font = .systemFont(ofSize: 13)
+        label.textColor = .labelColor
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
 

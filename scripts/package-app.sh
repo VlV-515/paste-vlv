@@ -47,4 +47,5 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 PLIST
 
 chmod +x "$MACOS_DIR/$APP_NAME"
+codesign --force --deep --sign - "$APP_DIR"
 echo "Created $APP_DIR"

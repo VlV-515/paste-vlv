@@ -38,6 +38,10 @@ open the clipboard panel.
 open dist/PasteVLv.app
 ```
 
+The packaging script ad-hoc signs the app bundle with the stable bundle
+identifier `dev.vlv.pastevlv`, which keeps macOS Accessibility permission tied
+to the packaged app across local rebuilds.
+
 For direct paste into other apps, macOS needs Accessibility permission:
 `System Settings > Privacy & Security > Accessibility > PasteVLv`.
 If macOS keeps asking after PasteVLv is already enabled, remove PasteVLv from
