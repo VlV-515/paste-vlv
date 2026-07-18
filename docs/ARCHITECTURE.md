@@ -21,10 +21,20 @@
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays Paste-style horizontal history cards,
-   pinboards, search, color-coded group state, double-click paste, and paste
-   actions.
+   pinboards, search, color-coded group state, first-item preselection on open,
+   left/right keyboard navigation, `Return` paste, and double-click paste.
 7. `PasteController` places a selected item back on `NSPasteboard` and sends
    `Cmd-V` with `CGEvent`.
+
+## Keyboard Interaction
+
+- `AppState` owns the current card selection so filtering, panel reopen, and
+  keyboard movement all share one source of truth.
+- Opening the panel refreshes data, selects the first visible item, and bumps a
+  presentation token so the SwiftUI search field takes focus again.
+- `ClipboardPanelView` installs a local key monitor scoped to the panel window
+  so `Left Arrow`, `Right Arrow`, `Return`, and `Shift-Return` still work while
+  the search field has focus.
 
 ## Data Model
 

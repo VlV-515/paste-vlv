@@ -11,8 +11,11 @@ SwiftUI and targets Mac only.
 - Paste-style horizontal history with pinboards/groups, colored cards, drag and
   drop assignment, rename, color, and delete actions.
 - Search by content, URL, source app, and preview text.
+- Opening the panel focuses search immediately and preselects the first result.
+- Keyboard navigation across history cards with `Left Arrow` and `Right Arrow`.
 - Quick paste with `Cmd-1` through `Cmd-9`.
 - Double-click any card to paste it.
+- `Return` pastes the selected card and `Shift-Return` pastes it as plain text.
 - Plain-text paste with the text button or the preferences default.
 - Direct paste restores focus to the app that was active before opening Paste-vlv.
 - Pause/resume clipboard capture.
@@ -29,7 +32,9 @@ swift run Paste-vlv
 ```
 
 The app runs as a menu bar utility. Use `Shift-Cmd-Ñ` or the menu bar icon to
-open the clipboard panel.
+open the clipboard panel. When the panel opens, you can type to search
+immediately, move the current selection with the arrow keys, and press
+`Return` to paste the highlighted item.
 
 ## Package A Local App
 

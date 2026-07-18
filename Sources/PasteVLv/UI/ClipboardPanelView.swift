@@ -48,8 +48,16 @@ struct ClipboardPanelView: View {
             PinboardEditSheet(pinboard: pinboard, appState: appState)
         }
         .onAppear {
-            isSearchFocused = true
+            focusSearchField()
         }
+        .onChange(of: appState.panelPresentationID) { _ in
+            focusSearchField()
+        }
+        .background(
+            KeyDownMonitor { event in
+                handleKeyDown(event)
+            }
+        )
     }
 
     private var topBar: some View {
@@ -149,30 +157,41 @@ struct ClipboardPanelView: View {
             if appState.items.isEmpty {
                 emptyState
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(alignment: .top, spacing: 20) {
-                        ForEach(Array(appState.items.enumerated()), id: \.element.id) { index, item in
-                            ClipboardCard(
-                                item: item,
-                                index: index,
-                                accentHex: appState.colorHex(for: item),
-                                pinboardName: appState.pinboardName(for: item),
-                                pinboards: appState.pinboards,
-                                onPaste: { onPaste(item, false) },
-                                onPastePlain: { onPaste(item, true) },
-                                onFavorite: { appState.toggleFavorite(itemID: item.id) },
-                                onPin: { appState.togglePinned(itemID: item.id) },
-                                onDelete: { appState.delete(itemID: item.id) },
-                                onAssign: { appState.assign(itemID: item.id, to: $0) }
-                            )
-                            .onDrag {
-                                NSItemProvider(object: item.id.uuidString as NSString)
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(alignment: .top, spacing: 20) {
+                            ForEach(Array(appState.items.enumerated()), id: \.element.id) { index, item in
+                                ClipboardCard(
+                                    item: item,
+                                    index: index,
+                                    accentHex: appState.colorHex(for: item),
+                                    pinboardName: appState.pinboardName(for: item),
+                                    pinboards: appState.pinboards,
+                                    isSelected: appState.selectedItemID == item.id,
+                                    onSelect: { appState.selectItem(id: item.id) },
+                                    onPaste: { onPaste(item, false) },
+                                    onPastePlain: { onPaste(item, true) },
+                                    onFavorite: { appState.toggleFavorite(itemID: item.id) },
+                                    onPin: { appState.togglePinned(itemID: item.id) },
+                                    onDelete: { appState.delete(itemID: item.id) },
+                                    onAssign: { appState.assign(itemID: item.id, to: $0) }
+                                )
+                                .id(item.id)
+                                .onDrag {
+                                    NSItemProvider(object: item.id.uuidString as NSString)
+                                }
+                                .quickPasteShortcut(index: index)
                             }
-                            .quickPasteShortcut(index: index)
                         }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 18)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 18)
+                    .onAppear {
+                        scrollSelection(into: proxy)
+                    }
+                    .onChange(of: appState.selectedItemID) { _ in
+                        scrollSelection(into: proxy)
+                    }
                 }
             }
         }
@@ -224,6 +243,42 @@ struct ClipboardPanelView: View {
         newPinboardColor = pinboardPalette[0]
         isAddingPinboard = false
     }
+
+    private func focusSearchField() {
+        DispatchQueue.main.async {
+            isSearchFocused = true
+        }
+    }
+
+    private func scrollSelection(into proxy: ScrollViewProxy) {
+        guard let selectedItemID = appState.selectedItemID else { return }
+        withAnimation(.easeInOut(duration: 0.14)) {
+            proxy.scrollTo(selectedItemID, anchor: .center)
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) -> Bool {
+        guard editingPinboard == nil, !isAddingPinboard else { return false }
+        let modifiers = event.modifierFlags.intersection([.shift, .control, .option, .command])
+
+        switch event.keyCode {
+        case 123 where modifiers.isEmpty:
+            appState.moveSelection(offset: -1)
+            return true
+        case 124 where modifiers.isEmpty:
+            appState.moveSelection(offset: 1)
+            return true
+        case 36, 76:
+            guard modifiers.isEmpty || modifiers == [.shift],
+                  let selectedItem = appState.selectedItem else {
+                return false
+            }
+            onPaste(selectedItem, modifiers == [.shift])
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 private struct PinboardTab: View {
@@ -258,6 +313,8 @@ private struct ClipboardCard: View {
     let accentHex: String
     let pinboardName: String?
     let pinboards: [Pinboard]
+    let isSelected: Bool
+    let onSelect: () -> Void
     let onPaste: () -> Void
     let onPastePlain: () -> Void
     let onFavorite: () -> Void
@@ -276,9 +333,22 @@ private struct ClipboardCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9), lineWidth: item.pinboardID == nil ? 1 : 3)
+                .stroke(
+                    isSelected ? Color.white.opacity(0.96) : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9),
+                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 3)
+                )
         )
-        .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color(hex: accentHex).opacity(isSelected ? 0.94 : 0), lineWidth: 2)
+                .padding(3)
+        )
+        .shadow(color: isSelected ? Color.white.opacity(0.16) : .black.opacity(0.22), radius: isSelected ? 14 : 8, y: 3)
+        .scaleEffect(isSelected ? 1.018 : 1)
+        .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .onTapGesture {
+            onSelect()
+        }
         .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
             Button("Pegar") { onPaste() }
@@ -576,5 +646,59 @@ private struct QuickPasteShortcut: ViewModifier {
 private extension View {
     func quickPasteShortcut(index: Int) -> some View {
         modifier(QuickPasteShortcut(index: index))
+    }
+}
+
+private struct KeyDownMonitor: NSViewRepresentable {
+    let onKeyDown: (NSEvent) -> Bool
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onKeyDown: onKeyDown)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        context.coordinator.hostView = view
+        context.coordinator.installMonitorIfNeeded()
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.hostView = nsView
+        context.coordinator.onKeyDown = onKeyDown
+        context.coordinator.installMonitorIfNeeded()
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.removeMonitor()
+    }
+
+    final class Coordinator {
+        weak var hostView: NSView?
+        var onKeyDown: (NSEvent) -> Bool
+        private var monitor: Any?
+
+        init(onKeyDown: @escaping (NSEvent) -> Bool) {
+            self.onKeyDown = onKeyDown
+        }
+
+        func installMonitorIfNeeded() {
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self,
+                      let hostWindow = self.hostView?.window,
+                      event.window === hostWindow else {
+                    return event
+                }
+
+                return self.onKeyDown(event) ? nil : event
+            }
+        }
+
+        func removeMonitor() {
+            guard let monitor else { return }
+            NSEvent.removeMonitor(monitor)
+            self.monitor = nil
+        }
     }
 }

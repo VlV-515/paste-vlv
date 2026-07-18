@@ -8,10 +8,12 @@ final class AppState: ObservableObject {
     @Published var pinboards: [Pinboard] = []
     @Published var selectedPinboardID: UUID?
     @Published var searchText = "" {
-        didSet { refreshItems() }
+        didSet { refreshItems(resetSelection: true) }
     }
+    @Published var selectedItemID: UUID?
     @Published var newPinboardName = ""
     @Published var lastSourceAppName: String?
+    @Published private(set) var panelPresentationID = UUID()
 
     @Published var launchAtLoginEnabled: Bool {
         didSet { settings.launchAtLoginEnabled = launchAtLoginEnabled }
@@ -66,23 +68,60 @@ final class AppState: ObservableObject {
 
     func bootstrap() {
         repository.bootstrapPinboardsIfNeeded()
-        refreshAll()
+        refreshAll(resetSelection: true)
         cleanupExpiredItems()
     }
 
-    func refreshAll() {
+    func refreshAll(resetSelection: Bool = false) {
         pinboards = repository.fetchPinboards()
-        refreshItems()
+        refreshItems(resetSelection: resetSelection)
     }
 
-    func refreshItems() {
+    func refreshItems(resetSelection: Bool = false) {
+        let previousSelection = selectedItemID
         items = repository.fetchItems(search: searchText, pinboardID: selectedPinboardID)
         lastSourceAppName = items.first?.sourceAppName
+
+        if resetSelection {
+            selectedItemID = items.first?.id
+            return
+        }
+
+        if let previousSelection,
+           items.contains(where: { $0.id == previousSelection }) {
+            selectedItemID = previousSelection
+        } else {
+            selectedItemID = items.first?.id
+        }
     }
 
     func select(pinboardID: UUID?) {
         selectedPinboardID = pinboardID
-        refreshItems()
+        refreshItems(resetSelection: true)
+    }
+
+    func selectItem(id: UUID) {
+        guard items.contains(where: { $0.id == id }) else { return }
+        selectedItemID = id
+    }
+
+    func moveSelection(offset: Int) {
+        guard !items.isEmpty else {
+            selectedItemID = nil
+            return
+        }
+
+        let currentIndex = items.firstIndex(where: { $0.id == selectedItemID }) ?? 0
+        let nextIndex = min(max(currentIndex + offset, 0), items.count - 1)
+        selectedItemID = items[nextIndex].id
+    }
+
+    func prepareForPanelPresentation() {
+        refreshAll(resetSelection: true)
+    }
+
+    func notifyPanelPresented() {
+        panelPresentationID = UUID()
     }
 
     func createPinboard() {
@@ -155,5 +194,10 @@ final class AppState: ObservableObject {
     func pinboardName(for item: ClipboardItem) -> String? {
         guard let pinboardID = item.pinboardID else { return nil }
         return pinboards.first(where: { $0.id == pinboardID })?.name
+    }
+
+    var selectedItem: ClipboardItem? {
+        guard let selectedItemID else { return items.first }
+        return items.first(where: { $0.id == selectedItemID }) ?? items.first
     }
 }

@@ -139,9 +139,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showPanel() {
         pasteTargetApplication = currentPasteTargetApplication()
-        appState.refreshAll()
+        appState.prepareForPanelPresentation()
         positionPanel()
-        panel?.orderFrontRegardless()
+        panel?.makeKeyAndOrderFront(nil)
+        appState.notifyPanelPresented()
     }
 
     private func hidePanel() {
