@@ -1,4 +1,7 @@
-# Paste-vlv
+<h1 align="center">
+  <img src="docs/images/app-icon.png" width="64" height="64" alt="Paste-vlv app icon">
+  Paste-vlv
+</h1>
 
 <p align="center">
   <strong>A fast, local-first clipboard manager for macOS.</strong><br>
