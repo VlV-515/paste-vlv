@@ -7,11 +7,12 @@ SwiftUI and targets Mac only.
 
 - Clipboard history for text, links, images, and files.
 - Configurable global shortcut, default `Shift-Cmd-Ñ`.
-- Menu bar resident app with a floating bottom panel.
+- Menu bar resident app with a full-width floating bottom panel.
 - Paste-style horizontal history with pinboards/groups, colored cards, drag and
   drop assignment, rename, color, and delete actions.
 - Search by content, URL, source app, and preview text.
 - Quick paste with `Cmd-1` through `Cmd-9`.
+- Double-click any card to paste it.
 - Plain-text paste with the text button or the preferences default.
 - Pause/resume clipboard capture.
 - Preferences window with General and Shortcuts tabs.

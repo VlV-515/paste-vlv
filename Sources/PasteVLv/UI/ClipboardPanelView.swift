@@ -53,86 +53,92 @@ struct ClipboardPanelView: View {
     }
 
     private var topBar: some View {
-        HStack(spacing: 18) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.white.opacity(0.62))
-                TextField("", text: $appState.searchText, prompt: Text("Buscar").foregroundColor(.white.opacity(0.42)))
-                    .textFieldStyle(.plain)
-                    .focused($isSearchFocused)
-                    .foregroundStyle(.white)
-                    .frame(width: 160)
+        ZStack {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.white.opacity(0.62))
+                    TextField("", text: $appState.searchText, prompt: Text("Buscar").foregroundColor(.white.opacity(0.42)))
+                        .textFieldStyle(.plain)
+                        .focused($isSearchFocused)
+                        .foregroundStyle(.white)
+                        .frame(width: 160)
+                }
+
+                Spacer()
+
+                Menu {
+                    Button("Preferencias...") {
+                        onOpenPreferences()
+                    }
+                    Divider()
+                    Button(appState.isCapturePaused ? "Reanudar captura" : "Pausar captura") {
+                        appState.isCapturePaused.toggle()
+                    }
+                    Button("Cerrar") {
+                        onClose()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.78))
+                }
+                .menuStyle(.borderlessButton)
             }
 
-            PinboardTab(
-                title: "Clipboard History",
-                colorHex: "#C7CDD8",
-                isSelected: appState.selectedPinboardID == nil,
-                onSelect: { appState.select(pinboardID: nil) }
-            )
+            HStack(spacing: 18) {
+                PinboardTab(
+                    title: "Clipboard History",
+                    colorHex: "#C7CDD8",
+                    isSelected: appState.selectedPinboardID == nil,
+                    onSelect: { appState.select(pinboardID: nil) }
+                )
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 18) {
-                    ForEach(appState.pinboards) { pinboard in
-                        PinboardTab(
-                            title: pinboard.name,
-                            colorHex: pinboard.colorHex,
-                            isSelected: appState.selectedPinboardID == pinboard.id,
-                            onSelect: { appState.select(pinboardID: pinboard.id) }
-                        )
-                        .contextMenu {
-                            Button("Renombrar") {
-                                editingPinboard = pinboard
-                            }
-                            Button(role: .destructive) {
-                                appState.delete(pinboardID: pinboard.id)
-                            } label: {
-                                Text("Eliminar")
-                            }
-                            Divider()
-                            ForEach(pinboardPalette, id: \.self) { colorHex in
-                                Button {
-                                    appState.update(pinboardID: pinboard.id, name: pinboard.name, colorHex: colorHex)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 18) {
+                        ForEach(appState.pinboards) { pinboard in
+                            PinboardTab(
+                                title: pinboard.name,
+                                colorHex: pinboard.colorHex,
+                                isSelected: appState.selectedPinboardID == pinboard.id,
+                                onSelect: { appState.select(pinboardID: pinboard.id) }
+                            )
+                            .contextMenu {
+                                Button("Renombrar") {
+                                    editingPinboard = pinboard
+                                }
+                                Button(role: .destructive) {
+                                    appState.delete(pinboardID: pinboard.id)
                                 } label: {
-                                    Label(colorName(colorHex), systemImage: pinboard.colorHex == colorHex ? "checkmark.circle.fill" : "circle.fill")
+                                    Text("Eliminar")
+                                }
+                                Divider()
+                                ForEach(pinboardPalette, id: \.self) { colorHex in
+                                    Button {
+                                        appState.update(pinboardID: pinboard.id, name: pinboard.name, colorHex: colorHex)
+                                    } label: {
+                                        Label(colorName(colorHex), systemImage: pinboard.colorHex == colorHex ? "checkmark.circle.fill" : "circle.fill")
+                                    }
                                 }
                             }
-                        }
-                        .onDrop(of: [UTType.text], isTargeted: nil) { providers in
-                            assignDroppedItem(providers: providers, to: pinboard.id)
+                            .onDrop(of: [UTType.text], isTargeted: nil) { providers in
+                                assignDroppedItem(providers: providers, to: pinboard.id)
+                            }
                         }
                     }
                 }
-            }
+                .frame(maxWidth: 520)
 
-            Button {
-                isAddingPinboard = true
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 15, weight: .medium))
+                Button {
+                    isAddingPinboard = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white.opacity(0.68))
+                .help("Agregar grupo")
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.white.opacity(0.68))
-
-            Spacer(minLength: 12)
-
-            Menu {
-                Button("Preferencias...") {
-                    onOpenPreferences()
-                }
-                Divider()
-                Button(appState.isCapturePaused ? "Reanudar captura" : "Pausar captura") {
-                    appState.isCapturePaused.toggle()
-                }
-                Button("Cerrar") {
-                    onClose()
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.78))
-            }
-            .menuStyle(.borderlessButton)
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 18)
@@ -273,6 +279,7 @@ private struct ClipboardCard: View {
                 .stroke(Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9), lineWidth: item.pinboardID == nil ? 1 : 3)
         )
         .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
+        .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
             Button("Pegar") { onPaste() }
             Button("Pegar como texto plano") { onPastePlain() }

@@ -188,12 +188,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func positionPanel() {
         guard let panel else { return }
-        let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
-        let width = min(screenFrame.width - 80, 1240)
-        let height = min(screenFrame.height - 120, 380)
-        let x = screenFrame.midX - width / 2
-        let y = screenFrame.minY + 44
-        panel.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
+        let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
+        let height = min(screenFrame.height - 90, 380)
+        panel.setFrame(
+            NSRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: height),
+            display: true
+        )
     }
 
     @objc private func togglePanelFromStatusItem() {

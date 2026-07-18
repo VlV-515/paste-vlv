@@ -4,7 +4,8 @@
 
 - Swift Package Manager executable for development without a full Xcode project.
 - AppKit lifecycle through `NSApplication` and `NSStatusItem`.
-- SwiftUI for the floating clipboard panel.
+- SwiftUI for the full-width floating clipboard panel anchored to the bottom of
+  the screen.
 - Carbon `RegisterEventHotKey` for the configurable global shortcut, default
   `Shift-Cmd-Ñ`.
 - `NSPasteboard` polling for clipboard capture.
@@ -20,7 +21,8 @@
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays Paste-style horizontal history cards,
-   pinboards, search, color-coded group state, and paste actions.
+   pinboards, search, color-coded group state, double-click paste, and paste
+   actions.
 7. `PasteController` places a selected item back on `NSPasteboard` and sends
    `Cmd-V` with `CGEvent`.
 
