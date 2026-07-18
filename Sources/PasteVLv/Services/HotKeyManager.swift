@@ -8,6 +8,10 @@ final class HotKeyManager {
     var onHotKey: (() -> Void)?
 
     func registerDefaultShortcut() {
+        register(HotKeyShortcut.defaultOpen)
+    }
+
+    func register(_ shortcut: HotKeyShortcut) {
         unregister()
 
         var eventType = EventTypeSpec(
@@ -34,8 +38,8 @@ final class HotKeyManager {
 
         let hotKeyID = EventHotKeyID(signature: "PVLV".fourCharCode, id: 1)
         RegisterEventHotKey(
-            UInt32(kVK_ANSI_V),
-            UInt32(cmdKey | shiftKey),
+            shortcut.keyCode,
+            shortcut.modifiers,
             hotKeyID,
             GetApplicationEventTarget(),
             0,

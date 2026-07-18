@@ -6,13 +6,15 @@ SwiftUI and targets Mac only.
 ## Features
 
 - Clipboard history for text, links, images, and files.
-- Global shortcut: `Shift-Cmd-V`.
+- Configurable global shortcut, default `Shift-Cmd-Ñ`.
 - Menu bar resident app with a floating bottom panel.
-- Pinboards/groups with drag and drop assignment.
+- Paste-style horizontal history with pinboards/groups, colored cards, drag and
+  drop assignment, rename, color, and delete actions.
 - Search by content, URL, source app, and preview text.
 - Quick paste with `Cmd-1` through `Cmd-9`.
-- Plain-text paste with the text button.
+- Plain-text paste with the text button or the preferences default.
 - Pause/resume clipboard capture.
+- Preferences window with General and Shortcuts tabs.
 - Per-app privacy toggle for the current foreground app.
 - Retention policies: 1 day, 1 week, 1 month, 1 year, forever.
 - Local Core Data persistence through `NSPersistentCloudKitContainer`, ready for
@@ -24,7 +26,7 @@ SwiftUI and targets Mac only.
 swift run PasteVLv
 ```
 
-The app runs as a menu bar utility. Use `Shift-Cmd-V` or the menu bar icon to
+The app runs as a menu bar utility. Use `Shift-Cmd-Ñ` or the menu bar icon to
 open the clipboard panel.
 
 ## Package A Local App

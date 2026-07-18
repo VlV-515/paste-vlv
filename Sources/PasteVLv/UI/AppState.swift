@@ -13,6 +13,26 @@ final class AppState: ObservableObject {
     @Published var newPinboardName = ""
     @Published var lastSourceAppName: String?
 
+    @Published var launchAtLoginEnabled: Bool {
+        didSet { settings.launchAtLoginEnabled = launchAtLoginEnabled }
+    }
+
+    @Published var directPasteEnabled: Bool {
+        didSet { settings.directPasteEnabled = directPasteEnabled }
+    }
+
+    @Published var pastePlainTextByDefault: Bool {
+        didSet { settings.pastePlainTextByDefault = pastePlainTextByDefault }
+    }
+
+    @Published var soundEffectsEnabled: Bool {
+        didSet { settings.soundEffectsEnabled = soundEffectsEnabled }
+    }
+
+    @Published var showMenuBarIcon: Bool {
+        didSet { settings.showMenuBarIcon = showMenuBarIcon }
+    }
+
     @Published var isCapturePaused: Bool {
         didSet { settings.isCapturePaused = isCapturePaused }
     }
@@ -24,14 +44,24 @@ final class AppState: ObservableObject {
         }
     }
 
+    @Published var openShortcut: HotKeyShortcut {
+        didSet { settings.openShortcut = openShortcut }
+    }
+
     private let repository: ClipboardRepository
     let settings: AppSettings
 
     init(repository: ClipboardRepository, settings: AppSettings) {
         self.repository = repository
         self.settings = settings
+        self.launchAtLoginEnabled = settings.launchAtLoginEnabled
+        self.directPasteEnabled = settings.directPasteEnabled
+        self.pastePlainTextByDefault = settings.pastePlainTextByDefault
+        self.soundEffectsEnabled = settings.soundEffectsEnabled
+        self.showMenuBarIcon = settings.showMenuBarIcon
         self.isCapturePaused = settings.isCapturePaused
         self.retentionPolicy = settings.retentionPolicy
+        self.openShortcut = settings.openShortcut
     }
 
     func bootstrap() {
@@ -58,6 +88,24 @@ final class AppState: ObservableObject {
     func createPinboard() {
         repository.createPinboard(name: newPinboardName)
         newPinboardName = ""
+        refreshAll()
+    }
+
+    func createPinboard(name: String, colorHex: String) {
+        repository.createPinboard(name: name, colorHex: colorHex)
+        refreshAll()
+    }
+
+    func update(pinboardID: UUID, name: String, colorHex: String) {
+        repository.updatePinboard(id: pinboardID, name: name, colorHex: colorHex)
+        refreshAll()
+    }
+
+    func delete(pinboardID: UUID) {
+        repository.deletePinboard(id: pinboardID)
+        if selectedPinboardID == pinboardID {
+            selectedPinboardID = nil
+        }
         refreshAll()
     }
 
@@ -89,5 +137,23 @@ final class AppState: ObservableObject {
     func cleanupExpiredItems() {
         repository.cleanupItems(olderThan: retentionPolicy.cutoffDate)
         refreshItems()
+    }
+
+    func clearHistory() {
+        repository.deleteAllItems()
+        refreshItems()
+    }
+
+    func colorHex(for item: ClipboardItem) -> String {
+        guard let pinboardID = item.pinboardID,
+              let pinboard = pinboards.first(where: { $0.id == pinboardID }) else {
+            return "#6EA7F7"
+        }
+        return pinboard.colorHex
+    }
+
+    func pinboardName(for item: ClipboardItem) -> String? {
+        guard let pinboardID = item.pinboardID else { return nil }
+        return pinboards.first(where: { $0.id == pinboardID })?.name
     }
 }

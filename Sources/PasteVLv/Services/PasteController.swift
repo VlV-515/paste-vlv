@@ -4,6 +4,10 @@ import Carbon.HIToolbox
 import Foundation
 
 final class PasteController {
+    func copy(_ item: ClipboardItem, asPlainText: Bool = false) {
+        placeOnPasteboard(item, asPlainText: asPlainText)
+    }
+
     func paste(_ item: ClipboardItem, asPlainText: Bool = false) {
         placeOnPasteboard(item, asPlainText: asPlainText)
         requestAccessibilityIfNeeded()

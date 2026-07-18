@@ -7,7 +7,7 @@ privacy-sensitive clipboard data.
 ## Goals
 
 - Capture clipboard history for text, links, images, and files.
-- Open from a global shortcut, currently `Shift-Cmd-V`.
+- Open from a configurable global shortcut, default `Shift-Cmd-Ñ`.
 - Provide pinboards/groups for saved copied content.
 - Support search, quick paste, plain-text paste, pause/resume capture, and
   per-app privacy exclusions.

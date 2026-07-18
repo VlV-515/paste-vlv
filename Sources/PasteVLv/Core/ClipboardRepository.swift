@@ -146,16 +146,60 @@ final class ClipboardRepository {
     }
 
     func createPinboard(name: String) {
+        createPinboard(name: name, colorHex: ["#F85B5B", "#F59E0B", "#FACC15", "#63D957", "#38BDF8", "#C084FC", "#94A3B8"].randomElement()!)
+    }
+
+    func createPinboard(name: String, colorHex: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         let pinboard = PinboardEntity(context: context)
         pinboard.id = UUID()
         pinboard.name = trimmed
-        pinboard.colorHex = ["#2563EB", "#059669", "#D97706", "#7C3AED", "#DC2626"].randomElement()!
+        pinboard.colorHex = colorHex
         pinboard.sortOrder = Int16(fetchPinboards().count)
         pinboard.createdAt = Date()
         save()
+    }
+
+    func updatePinboard(id: UUID, name: String, colorHex: String) {
+        guard let pinboard = findPinboard(id: id) else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        pinboard.name = trimmed
+        pinboard.colorHex = colorHex
+        save()
+    }
+
+    func deletePinboard(id: UUID) {
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.predicate = NSPredicate(format: "pinboardID == %@", id as CVarArg)
+
+        do {
+            try context.fetch(request).forEach { $0.pinboardID = nil }
+        } catch {
+            NSLog("Unable to unassign deleted pinboard items: \(error.localizedDescription)")
+        }
+
+        guard let pinboard = findPinboard(id: id) else {
+            save()
+            return
+        }
+
+        context.delete(pinboard)
+        save()
+    }
+
+    func deleteAllItems() {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "ClipboardItemEntity")
+        let delete = NSBatchDeleteRequest(fetchRequest: request)
+
+        do {
+            try context.execute(delete)
+            save()
+        } catch {
+            NSLog("Unable to clear clipboard history: \(error.localizedDescription)")
+        }
     }
 
     func cleanupItems(olderThan date: Date?) {
@@ -181,6 +225,13 @@ final class ClipboardRepository {
 
     private func findItem(id: UUID) -> ClipboardItemEntity? {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        return try? context.fetch(request).first
+    }
+
+    private func findPinboard(id: UUID) -> PinboardEntity? {
+        let request = NSFetchRequest<PinboardEntity>(entityName: "PinboardEntity")
         request.fetchLimit = 1
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         return try? context.fetch(request).first
