@@ -45,3 +45,10 @@ iCloud container, signing team, and entitlements are configured.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the implementation shape
 and next steps.
+
+## Codex Docs
+
+Agent-facing documentation starts at [AGENTS.md](AGENTS.md). The full Codex
+init lives under `.codex/`, with rules, role prompts, and the local
+`paste-vlv-development` skill. See [docs/agent-guidance.md](docs/agent-guidance.md)
+for the map.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "PasteVLv Development"
+  short_description: "Build and maintain the native macOS PasteVLv clipboard manager."
+  default_prompt: "Use this skill when changing PasteVLv. Read the project rules, preserve the native Swift/AppKit/SwiftUI architecture, and validate with SwiftPM."
