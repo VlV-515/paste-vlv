@@ -14,6 +14,7 @@ SwiftUI and targets Mac only.
 - Quick paste with `Cmd-1` through `Cmd-9`.
 - Double-click any card to paste it.
 - Plain-text paste with the text button or the preferences default.
+- Direct paste restores focus to the app that was active before opening PasteVLv.
 - Pause/resume clipboard capture.
 - Preferences window with General and Shortcuts tabs.
 - Per-app privacy toggle for the current foreground app.

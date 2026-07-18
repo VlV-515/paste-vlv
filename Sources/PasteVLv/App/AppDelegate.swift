@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var panel: NSPanel?
     private var preferencesWindow: NSWindow?
+    private var pasteTargetApplication: NSRunningApplication?
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -132,6 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showPanel() {
+        pasteTargetApplication = currentPasteTargetApplication()
         appState.refreshAll()
         positionPanel()
         NSApp.activate(ignoringOtherApps: true)
@@ -164,7 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handlePaste(item: ClipboardItem, plainText: Bool) {
         let pasteAsPlainText = plainText || settings.pastePlainTextByDefault
         if settings.directPasteEnabled {
-            pasteController.paste(item, asPlainText: pasteAsPlainText)
+            pasteController.paste(
+                item,
+                asPlainText: pasteAsPlainText,
+                into: pasteTargetApplication
+            )
         } else {
             pasteController.copy(item, asPlainText: pasteAsPlainText)
         }
@@ -172,6 +178,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settings.soundEffectsEnabled {
             NSSound.beep()
         }
+    }
+
+    private func currentPasteTargetApplication() -> NSRunningApplication? {
+        guard let application = NSWorkspace.shared.frontmostApplication,
+              application.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
+            return nil
+        }
+        return application
     }
 
     private func applyLaunchAtLoginSetting() {

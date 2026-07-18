@@ -10,12 +10,18 @@ final class PasteController {
         placeOnPasteboard(item, asPlainText: asPlainText)
     }
 
-    func paste(_ item: ClipboardItem, asPlainText: Bool = false) {
+    func paste(
+        _ item: ClipboardItem,
+        asPlainText: Bool = false,
+        into targetApplication: NSRunningApplication? = nil
+    ) {
         placeOnPasteboard(item, asPlainText: asPlainText)
 
         guard canSendDirectPaste() else { return }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+        targetApplication?.activate(options: [.activateIgnoringOtherApps, .activateAllWindows])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             self.sendCommandV()
         }
     }
