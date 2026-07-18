@@ -70,15 +70,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         let hostingController = NSHostingController(rootView: view)
-        let panel = NSPanel(
+        let panel = ClipboardOverlayPanel(
             contentRect: NSRect(x: 0, y: 0, width: 1180, height: 360),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
         panel.title = "PasteVLv"
         panel.titlebarAppearsTransparent = true
         panel.isReleasedWhenClosed = false
+        panel.hidesOnDeactivate = false
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.contentViewController = hostingController
@@ -136,8 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pasteTargetApplication = currentPasteTargetApplication()
         appState.refreshAll()
         positionPanel()
-        NSApp.activate(ignoringOtherApps: true)
-        panel?.makeKeyAndOrderFront(nil)
+        panel?.orderFrontRegardless()
     }
 
     private func hidePanel() {
@@ -229,4 +229,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func quit() {
         NSApp.terminate(nil)
     }
+}
+
+private final class ClipboardOverlayPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
 }
