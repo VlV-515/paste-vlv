@@ -23,7 +23,9 @@
 6. `ClipboardPanelView` displays Paste-style horizontal history cards,
    pinboards, search, color-coded group state, first-item preselection on open,
    left/right keyboard navigation, `Return` paste, and double-click paste.
-7. `PasteController` places a selected item back on `NSPasteboard` and sends
+7. `AppState` opens native import/export panels and delegates JSON archive
+   reads/writes to `ClipboardRepository`.
+8. `PasteController` places a selected item back on `NSPasteboard` and sends
    `Cmd-V` with `CGEvent`.
 
 ## Keyboard Interaction
@@ -47,6 +49,11 @@
 - `PinboardEntity`
   - name, color, sort order, creation date
 - Images are stored as files in Application Support and referenced by path.
+- JSON import/export uses schema version `1` and contains:
+  - pinboards and clipboard items with stable UUIDs
+  - embedded image attachment data
+  - file paths exactly as captured
+  - export metadata and timestamp
 
 ## CloudKit Path
 
@@ -65,4 +72,6 @@ The model is CloudKit-friendly but CloudKit is not turned on yet. To enable it:
 - Running with `swift run` is useful for development, but the packaged `.app`
   is better for macOS privacy prompts.
 - Direct paste needs Accessibility permission.
+- File history import restores path references, but the referenced files may not
+  exist on another Mac anymore.
 - OCR, shared pinboards, and iOS support are intentionally out of scope.

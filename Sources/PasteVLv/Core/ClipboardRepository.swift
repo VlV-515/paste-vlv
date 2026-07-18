@@ -216,6 +216,82 @@ final class ClipboardRepository {
         }
     }
 
+    func exportHistory(to url: URL) throws {
+        let archive = try makeHistoryArchive(exportedAt: Date())
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+        let data = try encoder.encode(archive)
+        try data.write(to: url, options: .atomic)
+    }
+
+    func importHistory(from url: URL) throws -> ClipboardHistoryImportSummary {
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let archive = try decoder.decode(ClipboardHistoryArchive.self, from: data).validated()
+
+        var createdPinboards = 0
+        var updatedPinboards = 0
+        var createdItems = 0
+        var updatedItems = 0
+
+        for snapshot in archive.pinboards.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+            let entity: PinboardEntity
+            if let existing = findPinboard(id: snapshot.id) {
+                entity = existing
+                updatedPinboards += 1
+            } else {
+                entity = PinboardEntity(context: context)
+                createdPinboards += 1
+            }
+
+            entity.id = snapshot.id
+            entity.name = snapshot.name
+            entity.colorHex = snapshot.colorHex
+            entity.sortOrder = snapshot.sortOrder
+            entity.createdAt = snapshot.createdAt
+        }
+
+        for snapshot in archive.items.sorted(by: { $0.createdAt < $1.createdAt }) {
+            let entity: ClipboardItemEntity
+            if let existing = findItem(id: snapshot.id) {
+                entity = existing
+                updatedItems += 1
+            } else {
+                entity = ClipboardItemEntity(context: context)
+                createdItems += 1
+            }
+
+            entity.id = snapshot.id
+            entity.kind = snapshot.kind.rawValue
+            entity.preview = snapshot.preview
+            entity.searchableText = snapshot.searchableText
+            entity.text = snapshot.text
+            entity.urlString = snapshot.urlString
+            entity.filePath = snapshot.filePaths?.joined(separator: "\n")
+            entity.attachmentPath = try importedAttachmentPath(for: snapshot)
+            entity.sourceAppName = snapshot.sourceAppName
+            entity.sourceAppBundleID = snapshot.sourceAppBundleID
+            entity.createdAt = snapshot.createdAt
+            entity.contentHash = snapshot.contentHash
+            entity.isFavorite = snapshot.isFavorite
+            entity.isPinned = snapshot.isPinned
+            entity.pinboardID = snapshot.pinboardID
+        }
+
+        save()
+
+        return ClipboardHistoryImportSummary(
+            createdPinboards: createdPinboards,
+            updatedPinboards: updatedPinboards,
+            createdItems: createdItems,
+            updatedItems: updatedItems
+        )
+    }
+
     private func existingItem(hash: String) -> ClipboardItemEntity? {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
         request.fetchLimit = 1
@@ -244,6 +320,88 @@ final class ClipboardRepository {
         } catch {
             NSLog("Unable to save clipboard data: \(error.localizedDescription)")
         }
+    }
+
+    private func makeHistoryArchive(exportedAt: Date) throws -> ClipboardHistoryArchive {
+        ClipboardHistoryArchive(
+            schemaVersion: ClipboardHistoryArchive.currentSchemaVersion,
+            exportedAt: exportedAt,
+            exportedBy: ClipboardHistoryExporter(
+                appName: "Paste-vlv",
+                bundleIdentifier: Bundle.main.bundleIdentifier ?? "dev.vlv.pastevlv",
+                platform: "macOS"
+            ),
+            pinboards: try fetchAllPinboardEntities().map {
+                ClipboardHistoryPinboard(
+                    id: $0.id,
+                    name: $0.name,
+                    colorHex: $0.colorHex,
+                    sortOrder: $0.sortOrder,
+                    createdAt: $0.createdAt
+                )
+            },
+            items: try fetchAllItemEntities().map { entity in
+                let attachmentURL = entity.attachmentPath.map(URL.init(fileURLWithPath:))
+                let attachmentData: Data?
+                if entity.kind == ClipboardKind.image.rawValue, let attachmentURL {
+                    guard FileManager.default.fileExists(atPath: attachmentURL.path) else {
+                        throw ClipboardTransferError.missingImageAttachment(attachmentURL)
+                    }
+                    attachmentData = try Data(contentsOf: attachmentURL)
+                } else {
+                    attachmentData = nil
+                }
+
+                return ClipboardHistoryItem(
+                    id: entity.id,
+                    kind: ClipboardKind(rawValue: entity.kind) ?? .text,
+                    preview: entity.preview,
+                    searchableText: entity.searchableText,
+                    text: entity.text,
+                    urlString: entity.urlString,
+                    filePaths: entity.filePath?.split(separator: "\n").map(String.init),
+                    attachmentFileName: attachmentURL?.lastPathComponent,
+                    attachmentData: attachmentData,
+                    sourceAppName: entity.sourceAppName,
+                    sourceAppBundleID: entity.sourceAppBundleID,
+                    createdAt: entity.createdAt,
+                    contentHash: entity.contentHash,
+                    isFavorite: entity.isFavorite,
+                    isPinned: entity.isPinned,
+                    pinboardID: entity.pinboardID
+                )
+            }
+        )
+    }
+
+    private func fetchAllItemEntities() throws -> [ClipboardItemEntity] {
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
+        return try context.fetch(request)
+    }
+
+    private func fetchAllPinboardEntities() throws -> [PinboardEntity] {
+        let request = NSFetchRequest<PinboardEntity>(entityName: "PinboardEntity")
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "sortOrder", ascending: true),
+            NSSortDescriptor(key: "createdAt", ascending: true)
+        ]
+        return try context.fetch(request)
+    }
+
+    private func importedAttachmentPath(for snapshot: ClipboardHistoryItem) throws -> String? {
+        guard snapshot.kind == .image else { return nil }
+        guard let attachmentData = snapshot.attachmentData else {
+            throw ClipboardTransferError.missingImageData(snapshot.id)
+        }
+
+        let preferredName = snapshot.attachmentFileName?.split(separator: "/").last.map(String.init)
+        let fileName = preferredName.flatMap { $0.isEmpty ? nil : $0 } ?? "\(snapshot.id.uuidString).tiff"
+        let url = PersistenceController.attachmentsURL.appendingPathComponent("\(snapshot.id.uuidString)-\(fileName)")
+        try attachmentData.write(to: url, options: .atomic)
+        return url.path
     }
 
     private static func hash(_ data: Data) -> String {

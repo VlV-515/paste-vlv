@@ -31,6 +31,7 @@ Full command reference: [docs/commands.md](docs/commands.md)
 - Plain-text paste with the text button or the preferences default.
 - Direct paste restores focus to the app that was active before opening Paste-vlv.
 - Pause/resume clipboard capture.
+- Export/import of clipboard history and pinboards through versioned JSON backups.
 - Preferences window with General and Shortcuts tabs.
 - Per-app privacy toggle for the current foreground app.
 - Retention policies: 1 day, 1 week, 1 month, 1 year, forever.
@@ -47,6 +48,29 @@ The app runs as a menu bar utility. Use `Shift-Cmd-Ñ` or the menu bar icon to
 open the clipboard panel. When the panel opens, you can type to search
 immediately, move the current selection with the arrow keys, and press
 `Return` to paste the highlighted item.
+
+## Backup And Restore
+
+Paste-vlv can export the full clipboard history plus pinboards to a JSON file
+named like `paste-vlv-history-2026-07-18-14-30-00.json`.
+
+Where to find it:
+
+- Menu bar menu: `Exportar historial...` / `Importar historial...`
+- Panel menu: `...`
+- Preferences > General > `Respaldo JSON`
+
+What the JSON includes:
+
+- Schema version and export timestamp.
+- Pinboards with IDs, names, colors, and order.
+- Clipboard items with metadata, flags, pinboard assignment, and creation date.
+- Embedded image payloads as base64 JSON data so image history can be restored.
+- File-item paths exactly as they were captured on the exporting Mac.
+
+Import expects a JSON file with the same Paste-vlv archive structure. Invalid
+schema versions, duplicate IDs, broken pinboard references, or image entries
+without embedded binary data are rejected.
 
 ## Package A Local App
 

@@ -49,6 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Mostrar \(AppBranding.displayName)", action: #selector(showPanelFromMenu), keyEquivalent: "v"))
         menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(showPreferencesFromMenu), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Exportar historial...", action: #selector(exportHistoryFromMenu), keyEquivalent: "e"))
+        menu.addItem(NSMenuItem(title: "Importar historial...", action: #selector(importHistoryFromMenu), keyEquivalent: "i"))
         menu.addItem(NSMenuItem(title: "Pause Capture", action: #selector(toggleCapturePause), keyEquivalent: "p"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q"))
@@ -152,7 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPreferences() {
         if preferencesWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 620, height: 350),
+                contentRect: NSRect(x: 0, y: 0, width: 620, height: 420),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
@@ -225,6 +227,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showPreferencesFromMenu() {
         showPreferences()
+    }
+
+    @objc private func exportHistoryFromMenu() {
+        appState.exportHistoryInteractively()
+    }
+
+    @objc private func importHistoryFromMenu() {
+        appState.importHistoryInteractively()
     }
 
     @objc private func toggleCapturePause() {

@@ -17,7 +17,7 @@ struct PreferencesView: View {
                     Label("Atajos", systemImage: "command")
                 }
         }
-        .frame(width: 620, height: 350)
+        .frame(width: 620, height: 420)
     }
 }
 
@@ -61,6 +61,17 @@ private struct GeneralPreferencesView: View {
                     appState.clearHistory()
                 }
                 Spacer()
+            }
+
+            SettingsRow(title: "Respaldo JSON:") {
+                HStack(spacing: 10) {
+                    Button("Exportar historial...") {
+                        appState.exportHistoryInteractively()
+                    }
+                    Button("Importar historial...") {
+                        appState.importHistoryInteractively()
+                    }
+                }
             }
 
             Spacer()

@@ -9,10 +9,11 @@
 ## Core
 
 - `ClipboardModels.swift`: domain structs and clipboard kinds.
+- `ClipboardTransferModels.swift`: JSON archive schema, validation, and import summary.
 - `ManagedObjects.swift`: Core Data managed object classes.
 - `PersistenceController.swift`: programmatic Core Data model and store setup.
 - `ClipboardRepository.swift`: fetch, insert, dedupe, pinboard assignment,
-  cleanup, favorite, pinned, delete.
+  cleanup, favorite, pinned, delete, import, and export.
 
 ## Services
 
@@ -23,7 +24,7 @@
 
 ## UI
 
-- `AppState.swift`: observable state and app actions.
+- `AppState.swift`: observable state, app actions, and import/export dialogs.
 - `ClipboardPanelView.swift`: SwiftUI Paste-style panel, search, pinboards, cards, actions.
 - `PreferencesView.swift`: SwiftUI preferences tabs and shortcut recorder.
 

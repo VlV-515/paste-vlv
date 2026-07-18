@@ -1,6 +1,6 @@
 import Foundation
 
-enum ClipboardKind: String, CaseIterable, Identifiable {
+enum ClipboardKind: String, CaseIterable, Identifiable, Codable {
     case text
     case link
     case image

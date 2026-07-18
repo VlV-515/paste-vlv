@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import Foundation
+import UniformTypeIdentifiers
 
 @MainActor
 final class AppState: ObservableObject {
@@ -183,6 +184,57 @@ final class AppState: ObservableObject {
         refreshItems()
     }
 
+    func exportHistoryInteractively() {
+        let panel = NSSavePanel()
+        panel.title = "Exportar historial"
+        panel.message = "Guardar historial y grupos en un respaldo JSON."
+        panel.canCreateDirectories = true
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = defaultExportFilename()
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            try repository.exportHistory(to: url)
+            presentAlert(
+                title: "Exportación completada",
+                message: "Respaldo guardado en:\n\(url.path)"
+            )
+        } catch {
+            presentAlert(
+                title: "No se pudo exportar",
+                message: error.localizedDescription,
+                style: .warning
+            )
+        }
+    }
+
+    func importHistoryInteractively() {
+        let panel = NSOpenPanel()
+        panel.title = "Importar historial"
+        panel.message = "Selecciona un respaldo JSON exportado desde Paste-vlv."
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.json]
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let summary = try repository.importHistory(from: url)
+            refreshAll(resetSelection: true)
+            presentAlert(
+                title: "Importación completada",
+                message: summary.message
+            )
+        } catch {
+            presentAlert(
+                title: "No se pudo importar",
+                message: error.localizedDescription,
+                style: .warning
+            )
+        }
+    }
+
     func colorHex(for item: ClipboardItem) -> String {
         guard let pinboardID = item.pinboardID,
               let pinboard = pinboards.first(where: { $0.id == pinboardID }) else {
@@ -199,5 +251,23 @@ final class AppState: ObservableObject {
     var selectedItem: ClipboardItem? {
         guard let selectedItemID else { return items.first }
         return items.first(where: { $0.id == selectedItemID }) ?? items.first
+    }
+
+    private func defaultExportFilename() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
+        return "paste-vlv-history-\(formatter.string(from: Date())).json"
+    }
+
+    private func presentAlert(title: String, message: String, style: NSAlert.Style = .informational) {
+        let alert = NSAlert()
+        alert.alertStyle = style
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
