@@ -65,10 +65,10 @@ private struct GeneralPreferencesView: View {
 
             SettingsRow(title: "Respaldo JSON:") {
                 HStack(spacing: 10) {
-                    Button("Exportar historial...") {
+                    Button("Exportar grupos...") {
                         appState.exportHistoryInteractively()
                     }
-                    Button("Importar historial...") {
+                    Button("Importar grupos...") {
                         appState.importHistoryInteractively()
                     }
                 }

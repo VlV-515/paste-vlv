@@ -186,8 +186,8 @@ final class AppState: ObservableObject {
 
     func exportHistoryInteractively() {
         let panel = NSSavePanel()
-        panel.title = "Exportar historial"
-        panel.message = "Guardar historial y grupos en un respaldo JSON."
+        panel.title = "Exportar grupos"
+        panel.message = "Guardar grupos y textos agrupados en un respaldo JSON. Historial general e imágenes quedan fuera."
         panel.canCreateDirectories = true
         panel.allowedContentTypes = [.json]
         panel.nameFieldStringValue = defaultExportFilename()
@@ -195,10 +195,10 @@ final class AppState: ObservableObject {
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
         do {
-            try repository.exportHistory(to: url)
+            let summary = try repository.exportHistory(to: url)
             presentAlert(
                 title: "Exportación completada",
-                message: "Respaldo guardado en:\n\(url.path)"
+                message: "\(summary.message)\n\nArchivo:\n\(url.path)"
             )
         } catch {
             presentAlert(
@@ -211,8 +211,8 @@ final class AppState: ObservableObject {
 
     func importHistoryInteractively() {
         let panel = NSOpenPanel()
-        panel.title = "Importar historial"
-        panel.message = "Selecciona un respaldo JSON exportado desde Paste-vlv."
+        panel.title = "Importar grupos"
+        panel.message = "Selecciona un respaldo JSON de grupos con textos agrupados exportado desde Paste-vlv."
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.json]
@@ -259,7 +259,7 @@ final class AppState: ObservableObject {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
-        return "paste-vlv-history-\(formatter.string(from: Date())).json"
+        return "paste-vlv-groups-\(formatter.string(from: Date())).json"
     }
 
     private func presentAlert(title: String, message: String, style: NSAlert.Style = .informational) {

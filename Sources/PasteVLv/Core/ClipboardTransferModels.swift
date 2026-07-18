@@ -1,7 +1,7 @@
 import Foundation
 
 struct ClipboardHistoryArchive: Codable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let exportedAt: Date
@@ -28,13 +28,16 @@ struct ClipboardHistoryArchive: Codable {
                 throw ClipboardTransferError.duplicateItemID(item.id)
             }
 
-            if let pinboardID = item.pinboardID,
-               !validPinboardIDs.contains(pinboardID) {
+            guard let pinboardID = item.pinboardID else {
+                throw ClipboardTransferError.missingPinboardAssignment(item.id)
+            }
+
+            if !validPinboardIDs.contains(pinboardID) {
                 throw ClipboardTransferError.missingPinboard(pinboardID)
             }
 
-            if item.kind == .image, item.attachmentData == nil {
-                throw ClipboardTransferError.missingImageData(item.id)
+            if item.kind != .text {
+                throw ClipboardTransferError.unsupportedItemKind(item.kind)
             }
         }
 
@@ -62,10 +65,6 @@ struct ClipboardHistoryItem: Codable {
     let preview: String
     let searchableText: String
     let text: String?
-    let urlString: String?
-    let filePaths: [String]?
-    let attachmentFileName: String?
-    let attachmentData: Data?
     let sourceAppName: String?
     let sourceAppBundleID: String?
     let createdAt: Date
@@ -73,6 +72,26 @@ struct ClipboardHistoryItem: Codable {
     let isFavorite: Bool
     let isPinned: Bool
     let pinboardID: UUID?
+}
+
+struct ClipboardHistoryExportSummary {
+    let exportedPinboards: Int
+    let exportedItems: Int
+    let omittedUngroupedItems: Int
+    let omittedNonTextGroupedItems: Int
+
+    var message: String {
+        [
+            "Respaldo guardado.",
+            "Grupos exportados: \(exportedPinboards)",
+            "Textos exportados: \(exportedItems)",
+            "",
+            "Aviso:",
+            "Historial general sin grupo omitido: \(omittedUngroupedItems)",
+            "Items no-texto dentro de grupos omitidos: \(omittedNonTextGroupedItems)",
+            "Razón: exportar todo, sobre todo imágenes, expande mucho JSON."
+        ].joined(separator: "\n")
+    }
 }
 
 struct ClipboardHistoryImportSummary {
@@ -85,8 +104,8 @@ struct ClipboardHistoryImportSummary {
         [
             "Grupos nuevos: \(createdPinboards)",
             "Grupos actualizados: \(updatedPinboards)",
-            "Items nuevos: \(createdItems)",
-            "Items actualizados: \(updatedItems)"
+            "Textos nuevos: \(createdItems)",
+            "Textos actualizados: \(updatedItems)"
         ].joined(separator: "\n")
     }
 }
@@ -95,9 +114,9 @@ enum ClipboardTransferError: LocalizedError {
     case unsupportedSchemaVersion(Int)
     case duplicatePinboardID(UUID)
     case duplicateItemID(UUID)
+    case missingPinboardAssignment(UUID)
     case missingPinboard(UUID)
-    case missingImageData(UUID)
-    case missingImageAttachment(URL)
+    case unsupportedItemKind(ClipboardKind)
     case invalidArchive
 
     var errorDescription: String? {
@@ -108,12 +127,12 @@ enum ClipboardTransferError: LocalizedError {
             return "El JSON tiene grupos duplicados con id \(id.uuidString)."
         case .duplicateItemID(let id):
             return "El JSON tiene items duplicados con id \(id.uuidString)."
+        case .missingPinboardAssignment(let id):
+            return "El JSON tiene texto sin grupo asignado: \(id.uuidString)."
         case .missingPinboard(let id):
             return "El JSON referencia un grupo inexistente: \(id.uuidString)."
-        case .missingImageData(let id):
-            return "Falta payload binario para imagen \(id.uuidString)."
-        case .missingImageAttachment(let url):
-            return "No se encontró imagen adjunta para exportar: \(url.lastPathComponent)."
+        case .unsupportedItemKind(let kind):
+            return "El JSON solo admite textos agrupados. Item no soportado: \(kind.rawValue)."
         case .invalidArchive:
             return "El archivo no cumple estructura válida de respaldo Paste-vlv."
         }

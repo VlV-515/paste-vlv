@@ -29,5 +29,5 @@ privacy-sensitive clipboard data.
 - Core Data model is created programmatically for SwiftPM compatibility.
 - `NSPersistentCloudKitContainer` is used in local mode; CloudKit options are
   intentionally disabled.
-- Import/export of history uses versioned JSON backups with embedded image data.
+- Import/export of groups uses versioned JSON backups with grouped texts only.
 - `scripts/package-app.sh` creates a local unsigned `.app` bundle in `dist/`.

@@ -21,9 +21,11 @@ same commit as the code change.
 
 Current user-facing backup behavior:
 
-- Clipboard history import/export lives in `AppState`, with persistence handled
-  by `ClipboardRepository`.
-- JSON backups include pinboards, item metadata, embedded image data, and
-  export timestamps.
+- Group backup import/export lives in `AppState`, with persistence handled by
+  `ClipboardRepository`.
+- JSON backups include pinboards, grouped text items only, and export
+  timestamps.
+- General history without group, plus links, files, and images, are excluded on
+  purpose. Export should warn about that size-saving filter.
 - If the archive schema changes, update `README.md`, `docs/ARCHITECTURE.md`,
   and `docs/commands.md` in the same change.

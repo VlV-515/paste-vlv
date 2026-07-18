@@ -78,10 +78,10 @@ struct ClipboardPanelView: View {
                 Spacer()
 
                 Menu {
-                    Button("Exportar historial...") {
+                    Button("Exportar grupos...") {
                         appState.exportHistoryInteractively()
                     }
-                    Button("Importar historial...") {
+                    Button("Importar grupos...") {
                         appState.importHistoryInteractively()
                     }
                     Divider()

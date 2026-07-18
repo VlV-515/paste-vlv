@@ -96,6 +96,8 @@ open dist/Paste-vlv.app
   name in source code.
 - For direct paste into other apps, macOS needs Accessibility permission for
   the packaged app.
-- History backup and restore are UI actions, not CLI commands:
-  `Exportar historial...` and `Importar historial...` live in the menu bar
-  menu, panel menu, and Preferences > General.
+- Group backup and restore are UI actions, not CLI commands:
+  `Exportar grupos...` and `Importar grupos...` live in the menu bar menu,
+  panel menu, and Preferences > General.
+- Those JSON backups include only grouped texts. General history, images,
+  files, and links stay out on purpose.
