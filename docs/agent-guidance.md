@@ -1,6 +1,6 @@
 # Agent Guidance
 
-PasteVLv includes repo-native Codex documentation so future agents can work
+Paste-vlv includes repo-native Codex documentation so future agents can work
 without rediscovering the project from scratch.
 
 ## Entry Points

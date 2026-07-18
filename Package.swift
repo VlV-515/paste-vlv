@@ -7,7 +7,7 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "PasteVLv", targets: ["PasteVLv"])
+        .executable(name: "Paste-vlv", targets: ["PasteVLv"])
     ],
     targets: [
         .executableTarget(

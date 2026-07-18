@@ -186,7 +186,7 @@ struct ClipboardPanelView: View {
             Text("Copia algo para iniciar el historial")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.82))
-            Text(appState.openShortcut.displayName + " abre PasteVLv")
+            Text(appState.openShortcut.displayName + " abre " + AppBranding.displayName)
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.52))
         }

@@ -1,4 +1,4 @@
-# PasteVLv Agent Guide
+# Paste-vlv Agent Guide
 
 - Always use the local `caveman` skill in `ultra` mode for this project.
 
@@ -26,9 +26,9 @@ Treat it as a native macOS utility, not a web app.
 
 ```sh
 swift build
-swift run PasteVLv
+swift run Paste-vlv
 ./scripts/package-app.sh
-open dist/PasteVLv.app
+open dist/Paste-vlv.app
 ```
 
 Run `swift build` before committing source changes. Run `./scripts/package-app.sh`

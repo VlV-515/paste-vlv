@@ -1,4 +1,4 @@
-# PasteVLv
+# Paste-vlv
 
 Private macOS clipboard manager inspired by Paste. It is native Swift/AppKit/
 SwiftUI and targets Mac only.
@@ -14,7 +14,7 @@ SwiftUI and targets Mac only.
 - Quick paste with `Cmd-1` through `Cmd-9`.
 - Double-click any card to paste it.
 - Plain-text paste with the text button or the preferences default.
-- Direct paste restores focus to the app that was active before opening PasteVLv.
+- Direct paste restores focus to the app that was active before opening Paste-vlv.
 - Pause/resume clipboard capture.
 - Preferences window with General and Shortcuts tabs.
 - Per-app privacy toggle for the current foreground app.
@@ -25,7 +25,7 @@ SwiftUI and targets Mac only.
 ## Run During Development
 
 ```sh
-swift run PasteVLv
+swift run Paste-vlv
 ```
 
 The app runs as a menu bar utility. Use `Shift-Cmd-Ñ` or the menu bar icon to
@@ -35,7 +35,7 @@ open the clipboard panel.
 
 ```sh
 ./scripts/package-app.sh
-open dist/PasteVLv.app
+open dist/Paste-vlv.app
 ```
 
 The packaging script ad-hoc signs the app bundle with the stable bundle
@@ -43,9 +43,9 @@ identifier `dev.vlv.pastevlv`, which keeps macOS Accessibility permission tied
 to the packaged app across local rebuilds.
 
 For direct paste into other apps, macOS needs Accessibility permission:
-`System Settings > Privacy & Security > Accessibility > PasteVLv`.
-If macOS keeps asking after PasteVLv is already enabled, remove PasteVLv from
-that list, add `dist/PasteVLv.app` again, and restart the app.
+`System Settings > Privacy & Security > Accessibility > Paste-vlv`.
+If macOS keeps asking after Paste-vlv is already enabled, remove Paste-vlv from
+that list, add `dist/Paste-vlv.app` again, and restart the app.
 
 ## iCloud Sync Status
 

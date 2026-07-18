@@ -27,7 +27,7 @@ private struct GeneralPreferencesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             SettingsRow(title: "Arranque:") {
-                Toggle("Ejecutar PasteVLv al arranque del sistema", isOn: $appState.launchAtLoginEnabled)
+                Toggle("Ejecutar \(AppBranding.displayName) al arranque del sistema", isOn: $appState.launchAtLoginEnabled)
             }
 
             SettingsRow(title: "Integración:") {
@@ -40,7 +40,7 @@ private struct GeneralPreferencesView: View {
             SettingsRow(title: "Otros:") {
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Activar efectos de sonido", isOn: $appState.soundEffectsEnabled)
-                    Toggle("Mostrar icono de PasteVLv en barra de menú", isOn: $appState.showMenuBarIcon)
+                    Toggle("Mostrar icono de \(AppBranding.displayName) en barra de menú", isOn: $appState.showMenuBarIcon)
                 }
             }
 

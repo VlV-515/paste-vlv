@@ -38,12 +38,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "PasteVLv")
+        statusItem.button?.image = AppBranding.makeMenuBarIcon()
+        statusItem.button?.image?.isTemplate = true
+        statusItem.button?.imageScaling = .scaleProportionallyDown
+        statusItem.button?.toolTip = AppBranding.displayName
+        statusItem.button?.image?.accessibilityDescription = AppBranding.displayName
         statusItem.button?.action = #selector(togglePanelFromStatusItem)
         statusItem.button?.target = self
 
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Show PasteVLv", action: #selector(showPanelFromMenu), keyEquivalent: "v"))
+        menu.addItem(NSMenuItem(title: "Mostrar \(AppBranding.displayName)", action: #selector(showPanelFromMenu), keyEquivalent: "v"))
         menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(showPreferencesFromMenu), keyEquivalent: ","))
         menu.addItem(NSMenuItem(title: "Pause Capture", action: #selector(toggleCapturePause), keyEquivalent: "p"))
         menu.addItem(.separator())
@@ -76,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        panel.title = "PasteVLv"
+        panel.title = AppBranding.displayName
         panel.titlebarAppearsTransparent = true
         panel.isReleasedWhenClosed = false
         panel.hidesOnDeactivate = false
