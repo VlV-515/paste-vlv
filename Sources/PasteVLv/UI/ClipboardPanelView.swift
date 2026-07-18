@@ -134,11 +134,16 @@ struct ClipboardPanelView: View {
                                     Button {
                                         appState.update(pinboardID: pinboard.id, name: pinboard.name, colorHex: colorHex)
                                     } label: {
-                                        PinboardColorMenuLabel(
-                                            name: colorName(colorHex),
-                                            colorHex: colorHex,
-                                            isSelected: pinboard.colorHex == colorHex
-                                        )
+                                        Label {
+                                            Text(colorName(colorHex))
+                                        } icon: {
+                                            Image(
+                                                nsImage: pinboardColorMenuIcon(
+                                                    colorHex: colorHex,
+                                                    isSelected: pinboard.colorHex == colorHex
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -619,28 +624,43 @@ private func colorName(_ hex: String) -> String {
     }
 }
 
-private struct PinboardColorMenuLabel: View {
-    let name: String
-    let colorHex: String
-    let isSelected: Bool
+private func pinboardColorMenuIcon(colorHex: String, isSelected: Bool) -> NSImage {
+    let size = NSSize(width: 12, height: 12)
+    let image = NSImage(size: size)
 
-    var body: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(Color(hex: colorHex))
-                .frame(width: 10, height: 10)
-                .overlay {
-                    Circle()
-                        .stroke(Color.white.opacity(colorHex == "#FACC15" ? 0.45 : 0.18), lineWidth: 0.75)
-                }
+    image.lockFocus()
 
-            Text(name)
+    let rect = NSRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1)
+    let circle = NSBezierPath(ovalIn: rect)
+    let fillColor = NSColor(hex: colorHex)
+    let borderColor = NSColor.white.withAlphaComponent(colorHex == "#FACC15" ? 0.45 : 0.18)
 
-            if isSelected {
-                Image(systemName: "checkmark")
-            }
-        }
+    fillColor.setFill()
+    circle.fill()
+
+    borderColor.setStroke()
+    circle.lineWidth = 0.75
+    circle.stroke()
+
+    if isSelected {
+        let check = NSBezierPath()
+        check.move(to: NSPoint(x: 3.2, y: 6.2))
+        check.line(to: NSPoint(x: 5.2, y: 4.1))
+        check.line(to: NSPoint(x: 8.6, y: 8.0))
+        check.lineCapStyle = .round
+        check.lineJoinStyle = .round
+        check.lineWidth = 1.3
+
+        let checkColor: NSColor = colorHex == "#FACC15" || colorHex == "#94A3B8"
+            ? NSColor.black.withAlphaComponent(0.78)
+            : NSColor.white
+        checkColor.setStroke()
+        check.stroke()
     }
+
+    image.unlockFocus()
+    image.isTemplate = false
+    return image
 }
 
 private extension ClipboardKind {
@@ -673,6 +693,19 @@ extension Color {
         let green = Double((value >> 8) & 0xFF) / 255
         let blue = Double(value & 0xFF) / 255
         self.init(red: red, green: green, blue: blue)
+    }
+}
+
+private extension NSColor {
+    convenience init(hex: String) {
+        let clean = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        var value: UInt64 = 0
+        Scanner(string: clean).scanHexInt64(&value)
+
+        let red = CGFloat((value >> 16) & 0xFF) / 255
+        let green = CGFloat((value >> 8) & 0xFF) / 255
+        let blue = CGFloat(value & 0xFF) / 255
+        self.init(red: red, green: green, blue: blue, alpha: 1)
     }
 }
 
