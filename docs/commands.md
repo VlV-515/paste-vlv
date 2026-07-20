@@ -53,6 +53,23 @@ Use it when:
 - You changed launch behavior, packaging, bundle metadata, or `Info.plist`-like
   behavior.
 
+By default, this creates an ad-hoc signed local build. For a Developer ID build,
+set `CODESIGN_IDENTITY`:
+
+```sh
+CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/package-app.sh
+```
+
+### `./scripts/package-release.sh 1.0.0`
+
+Creates the GitHub Release upload assets:
+
+- `dist/Paste-vlv-1.0.0-macos-unsigned.zip`
+- `dist/Paste-vlv-1.0.0-macos-unsigned.zip.sha256`
+
+Use this for the current public release while the app is not Developer ID signed
+and notarized.
+
 ## Open The Packaged App
 
 ### `open dist/Paste-vlv.app`
@@ -90,6 +107,12 @@ swift run Paste-vlv
 open dist/Paste-vlv.app
 ```
 
+### Build GitHub Release assets
+
+```sh
+./scripts/package-release.sh 1.0.0
+```
+
 ## Notes
 
 - `Paste-vlv` is the executable and `.app` name. `PasteVLv` is the Swift target
@@ -105,3 +128,4 @@ open dist/Paste-vlv.app
   **🇲🇽 Español**. The choice persists locally.
 - Those JSON backups include only grouped texts. General history, images,
   files, and links stay out on purpose.
+- See `docs/release.md` for GitHub Release steps and the Developer ID path.

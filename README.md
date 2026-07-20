@@ -12,6 +12,8 @@
 <p align="center">
   <a href="https://github.com/VlV-515/paste-vlv">View source</a>
   ·
+  <a href="https://github.com/VlV-515/paste-vlv/releases">Releases</a>
+  ·
   <a href="#get-paste-vlv">Get it</a>
   ·
   <a href="#using-paste-vlv">How it works</a>
@@ -57,6 +59,15 @@ No account. No subscription. No server to sign into. Your clipboard history stay
 > **Clipboard privacy note:** clipboard managers can see what you copy. Avoid copying passwords, recovery codes, and other sensitive secrets. Paste-vlv keeps its current data locally, but it is not a password manager.
 
 ## Get Paste-vlv
+
+### Download v1.0.0
+
+Download the first public release from [GitHub Releases](https://github.com/VlV-515/paste-vlv/releases).
+
+The current binary is ad-hoc signed, not Developer ID signed, and not notarized.
+macOS may show a Gatekeeper warning on first launch. Clean Gatekeeper
+distribution requires a paid Apple Developer Program membership, Developer ID
+signing, and notarization.
 
 ### Requirements
 
@@ -205,7 +216,7 @@ Choose **Import groups…** from the same menus and select a Paste-vlv JSON arch
 
 Paste-vlv is a personal, native macOS project built with Swift Package Manager, AppKit, SwiftUI, Core Data, `NSPasteboard`, Carbon global hotkeys, and macOS accessibility APIs.
 
-Want the technical map? Read [Architecture](docs/ARCHITECTURE.md). Need the full command reference? Read [Commands](docs/commands.md).
+Want the technical map? Read [Architecture](docs/ARCHITECTURE.md). Need the full command reference? Read [Commands](docs/commands.md). Publishing a version? Read [Release Guide](docs/release.md).
 
 ## Contributing and status
 
