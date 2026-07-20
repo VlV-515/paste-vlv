@@ -81,7 +81,7 @@ paste-vlv
 SSH upload:
 
 ```sh
-./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME
+./scripts/publish-sourceforge.sh
 ```
 
 ## Later: Developer ID Release

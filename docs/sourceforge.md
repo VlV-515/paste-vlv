@@ -8,6 +8,7 @@ Project:
 - Admin: `https://sourceforge.net/p/paste-vlv/admin/`
 - Public project: `https://sourceforge.net/projects/paste-vlv/`
 - Release files: `https://sourceforge.net/projects/paste-vlv/files/v1.0.0/`
+- Username: `vlv`
 
 ## What SourceForge Needs
 
@@ -53,10 +54,10 @@ The `readme.md` file appears as release notes in the SourceForge file browser.
 If SSH is configured for SourceForge:
 
 ```sh
-./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME
+./scripts/publish-sourceforge.sh
 ```
 
-Example:
+Equivalent explicit command:
 
 ```sh
 ./scripts/publish-sourceforge.sh vlv
@@ -79,6 +80,52 @@ Direct ZIP download:
 ```text
 https://sourceforge.net/projects/paste-vlv/files/v1.0.0/Paste-vlv-1.0.0-macos-unsigned.zip/download
 ```
+
+## SSH Key Setup
+
+SourceForge SSH upload requires a SourceForge account SSH key. If this machine
+does not have a public key yet, create a SourceForge-specific key:
+
+```sh
+ssh-keygen -t ed25519 -C "vlv for sourceforge" -f ~/.ssh/id_ed25519_sourceforge
+```
+
+Then print the public key:
+
+```sh
+cat ~/.ssh/id_ed25519_sourceforge.pub
+```
+
+Add that public key in SourceForge account SSH key settings for user `vlv`.
+
+Optional local SSH config:
+
+```text
+Host frs.sourceforge.net
+  HostName frs.sourceforge.net
+  User vlv
+  IdentityFile ~/.ssh/id_ed25519_sourceforge
+  IdentitiesOnly yes
+```
+
+Verify SSH access:
+
+```sh
+ssh vlv@frs.sourceforge.net true
+```
+
+Expected success: no output and exit code `0`.
+
+## SSH Host Key
+
+The verified ED25519 fingerprint for `frs.sourceforge.net` is:
+
+```text
+SHA256:209BDmH3jsRyO9UeGPPgLWPSegKmYCBIya0nR/AWWCY
+```
+
+This matches SourceForge's published fingerprint for `web.sourceforge.net`,
+`web.sf.net`, `frs.sourceforge.net`, and `frs.sf.net`.
 
 ## Signing Status
 

@@ -122,7 +122,7 @@ open dist/Paste-vlv.app
 ### Upload SourceForge mirror files
 
 ```sh
-./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME
+./scripts/publish-sourceforge.sh
 ```
 
 ## Notes
