@@ -3,16 +3,22 @@
 SourceForge is a secondary mirror for Paste-vlv release files. GitHub Releases
 remain the primary release source.
 
+Project:
+
+- Admin: `https://sourceforge.net/p/paste-vlv/admin/`
+- Public project: `https://sourceforge.net/projects/paste-vlv/`
+- Release files: `https://sourceforge.net/projects/paste-vlv/files/v1.0.0/`
+
 ## What SourceForge Needs
 
-Create a SourceForge project first and note its project URL name. SourceForge
-uses that value as `PROJECTNAME` in file paths.
+Paste-vlv uses `paste-vlv` as the SourceForge project URL name. SourceForge uses
+that value as `PROJECTNAME` in file paths.
 
 SourceForge file releases can be managed through the web File Manager or through
 SFTP, SCP, and rsync. Release files live under:
 
 ```text
-/home/frs/project/PROJECTNAME/
+/home/frs/project/paste-vlv/
 ```
 
 ## Prepare Local Files
@@ -47,19 +53,31 @@ The `readme.md` file appears as release notes in the SourceForge file browser.
 If SSH is configured for SourceForge:
 
 ```sh
-./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME SOURCEFORGE_PROJECT
+./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME
 ```
 
 Example:
 
 ```sh
-./scripts/publish-sourceforge.sh vlv paste-vlv
+./scripts/publish-sourceforge.sh vlv
 ```
 
 The script uploads to:
 
 ```text
-/home/frs/project/SOURCEFORGE_PROJECT/v1.0.0/
+/home/frs/project/paste-vlv/v1.0.0/
+```
+
+After upload, the public folder should be:
+
+```text
+https://sourceforge.net/projects/paste-vlv/files/v1.0.0/
+```
+
+Direct ZIP download:
+
+```text
+https://sourceforge.net/projects/paste-vlv/files/v1.0.0/Paste-vlv-1.0.0-macos-unsigned.zip/download
 ```
 
 ## Signing Status

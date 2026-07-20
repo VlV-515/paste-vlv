@@ -72,6 +72,18 @@ Prepare files:
 
 Then upload through SourceForge Files or SSH. See `docs/sourceforge.md`.
 
+Default project:
+
+```text
+paste-vlv
+```
+
+SSH upload:
+
+```sh
+./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME
+```
+
 ## Later: Developer ID Release
 
 After upgrading to a paid Apple Developer Program membership:
