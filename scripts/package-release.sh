@@ -7,6 +7,7 @@ DIST_DIR="$ROOT_DIR/dist"
 VERSION="${1:-1.0.0}"
 BUILD="${BUILD_NUMBER:-1}"
 ARCHIVE_NAME="$APP_NAME-$VERSION-macos-unsigned.zip"
+CHECKSUM_NAME="$ARCHIVE_NAME.sha256"
 ARCHIVE_PATH="$DIST_DIR/$ARCHIVE_NAME"
 CHECKSUM_PATH="$ARCHIVE_PATH.sha256"
 
@@ -19,7 +20,10 @@ rm -f "$ARCHIVE_PATH" "$CHECKSUM_PATH"
   ditto -c -k --keepParent "$APP_NAME.app" "$ARCHIVE_NAME"
 )
 
-shasum -a 256 "$ARCHIVE_PATH" > "$CHECKSUM_PATH"
+(
+  cd "$DIST_DIR"
+  shasum -a 256 "$ARCHIVE_NAME" > "$CHECKSUM_NAME"
+)
 
 echo "Created $ARCHIVE_PATH"
 echo "Created $CHECKSUM_PATH"

@@ -113,6 +113,18 @@ open dist/Paste-vlv.app
 ./scripts/package-release.sh 1.0.0
 ```
 
+### Prepare SourceForge mirror files
+
+```sh
+./scripts/prepare-sourceforge-release.sh 1.0.0
+```
+
+### Upload SourceForge mirror files
+
+```sh
+./scripts/publish-sourceforge.sh SOURCEFORGE_USERNAME SOURCEFORGE_PROJECT
+```
+
 ## Notes
 
 - `Paste-vlv` is the executable and `.app` name. `PasteVLv` is the Swift target
@@ -129,3 +141,4 @@ open dist/Paste-vlv.app
 - Those JSON backups include only grouped texts. General history, images,
   files, and links stay out on purpose.
 - See `docs/release.md` for GitHub Release steps and the Developer ID path.
+- See `docs/sourceforge.md` for SourceForge mirror steps.

@@ -62,6 +62,16 @@ gh release create v1.0.0 \
    - `dist/Paste-vlv-1.0.0-macos-unsigned.zip.sha256`
 8. Publish.
 
+## Publish SourceForge Mirror
+
+Prepare files:
+
+```sh
+./scripts/prepare-sourceforge-release.sh 1.0.0
+```
+
+Then upload through SourceForge Files or SSH. See `docs/sourceforge.md`.
+
 ## Later: Developer ID Release
 
 After upgrading to a paid Apple Developer Program membership:
