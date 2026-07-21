@@ -255,7 +255,6 @@ struct ClipboardPanelView: View {
                                     .onDrag {
                                         NSItemProvider(object: item.id.uuidString as NSString)
                                     }
-                                    .quickPasteShortcut(index: index)
                                 }
                             }
                             .padding(.horizontal, 24)
@@ -738,7 +737,7 @@ private struct ClipboardCard: View {
 
     private var footer: some View {
         HStack {
-            Text(index < 9 ? "⌘\(index + 1)" : "")
+            Text("#\(index + 1)")
             Spacer()
             Text(footerDetail)
                 .lineLimit(1)
@@ -1038,25 +1037,6 @@ private extension NSColor {
         let green = CGFloat((value >> 8) & 0xFF) / 255
         let blue = CGFloat(value & 0xFF) / 255
         self.init(red: red, green: green, blue: blue, alpha: 1)
-    }
-}
-
-private struct QuickPasteShortcut: ViewModifier {
-    let index: Int
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if index < 9 {
-            content.keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
-        } else {
-            content
-        }
-    }
-}
-
-private extension View {
-    func quickPasteShortcut(index: Int) -> some View {
-        modifier(QuickPasteShortcut(index: index))
     }
 }
 
