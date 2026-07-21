@@ -820,24 +820,24 @@ private struct ClipboardCard: View {
         .font(.caption2)
         .foregroundStyle(.white.opacity(0.5))
         .padding(.horizontal, 12)
-        .frame(height: 26)
+        .frame(height: 30)
         .background(Color(hex: "#1C1C1E"))
     }
 
     @ViewBuilder
     private var footerDetailView: some View {
         if isShowingPinboardReference, let pinboardName {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 Circle()
                     .fill(Color(hex: accentHex))
-                    .frame(width: 7.5, height: 7.5)
+                    .frame(width: 9, height: 9)
                 Text(pinboardName)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11.5, weight: .semibold))
                     .lineLimit(1)
             }
             .foregroundStyle(.white.opacity(0.92))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
             .background(Color(hex: accentHex).opacity(0.18))
             .clipShape(Capsule())
         } else {
