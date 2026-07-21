@@ -62,10 +62,10 @@ No account. No subscription. No server to sign into. Your clipboard history stay
 
 ## Get Paste-vlv
 
-### Download v1.1.0
+### Download v1.1.1
 
-Download the first public release from [GitHub Releases](https://github.com/VlV-515/paste-vlv/releases).
-SourceForge mirror currently hosts [v1.0.0](https://sourceforge.net/projects/paste-vlv/files/v1.0.0/).
+Download the latest release from [GitHub Releases](https://github.com/VlV-515/paste-vlv/releases).
+SourceForge mirror also hosts [v1.1.1](https://sourceforge.net/projects/paste-vlv/files/v1.1.1/).
 
 The current binary is ad-hoc signed, not Developer ID signed, and not notarized.
 macOS may show a Gatekeeper warning on first launch. Clean Gatekeeper
