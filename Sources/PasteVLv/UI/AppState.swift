@@ -121,6 +121,8 @@ final class AppState: ObservableObject {
         guard items.contains(where: { $0.id == id }) else { return }
         selectedItemID = id
         selectedItemIDs = [id]
+        recordUse(itemID: id)
+        refreshItems()
     }
 
     func selectItems(_ itemIDs: Set<UUID>) {
@@ -192,6 +194,7 @@ final class AppState: ObservableObject {
     }
 
     func recordUse(itemID: UUID) {
+        settings.restoreToHistory([itemID])
         repository.recordUse(itemID: itemID)
     }
 
