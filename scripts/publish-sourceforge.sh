@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.1.0}"
 TAG="v$VERSION"
 DEFAULT_SOURCEFORGE_USERNAME="vlv"
 DEFAULT_SOURCEFORGE_PROJECT="paste-vlv"

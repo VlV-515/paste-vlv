@@ -60,12 +60,12 @@ set `CODESIGN_IDENTITY`:
 CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/package-app.sh
 ```
 
-### `./scripts/package-release.sh 1.0.0`
+### `./scripts/package-release.sh 1.1.0`
 
 Creates the GitHub Release upload assets:
 
-- `dist/Paste-vlv-1.0.0-macos-unsigned.zip`
-- `dist/Paste-vlv-1.0.0-macos-unsigned.zip.sha256`
+- `dist/Paste-vlv-1.1.0-macos-unsigned.zip`
+- `dist/Paste-vlv-1.1.0-macos-unsigned.zip.sha256`
 
 Use this for the current public release while the app is not Developer ID signed
 and notarized.
@@ -110,13 +110,13 @@ open dist/Paste-vlv.app
 ### Build GitHub Release assets
 
 ```sh
-./scripts/package-release.sh 1.0.0
+./scripts/package-release.sh 1.1.0
 ```
 
 ### Prepare SourceForge mirror files
 
 ```sh
-./scripts/prepare-sourceforge-release.sh 1.0.0
+./scripts/prepare-sourceforge-release.sh 1.1.0
 ```
 
 ### Upload SourceForge mirror files
