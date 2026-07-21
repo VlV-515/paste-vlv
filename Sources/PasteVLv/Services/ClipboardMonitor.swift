@@ -26,6 +26,10 @@ final class ClipboardMonitor {
         timer = nil
     }
 
+    func ignoreCurrentPasteboardChange() {
+        lastChangeCount = NSPasteboard.general.changeCount
+    }
+
     private func scanPasteboardIfNeeded() {
         guard !settings.isCapturePaused else { return }
 

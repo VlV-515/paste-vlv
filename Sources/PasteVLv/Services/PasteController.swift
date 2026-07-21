@@ -5,6 +5,7 @@ import Foundation
 
 final class PasteController {
     private var didRequestAccessibilityPrompt = false
+    var onPasteboardWrite: (() -> Void)?
 
     func copy(_ item: ClipboardItem, asPlainText: Bool = false) {
         placeOnPasteboard(item, asPlainText: asPlainText)
@@ -28,6 +29,7 @@ final class PasteController {
 
     private func placeOnPasteboard(_ item: ClipboardItem, asPlainText: Bool) {
         let pasteboard = NSPasteboard.general
+        defer { onPasteboardWrite?() }
         pasteboard.clearContents()
 
         if asPlainText {

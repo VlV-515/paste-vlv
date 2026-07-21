@@ -155,6 +155,7 @@ final class AppState: ObservableObject {
     }
 
     func prepareForPanelPresentation() {
+        selectedPinboardID = nil
         refreshAll(resetSelection: true)
     }
 

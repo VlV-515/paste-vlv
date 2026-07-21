@@ -16,14 +16,14 @@
 1. `PasteVLvMain` starts `NSApplication` as an accessory menu bar app.
 2. `AppDelegate` wires persistence, app state, the clipboard monitor, the hotkey,
    the status menu, the preferences window, and the SwiftUI panel.
-3. `ClipboardMonitor` watches `NSPasteboard.general.changeCount`.
+3. `ClipboardMonitor` watches `NSPasteboard.general.changeCount` and ignores writes initiated by `PasteController`, preventing a selected saved card from being recaptured or reordered.
 4. Captured text, links, files, and images are normalized into
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays dark Paste-style horizontal history cards,
    source-app icons/colors, single/multi-file presentations, rich URL metadata
    previews, draggable/reorderable pinboard chips, search, color-coded group
-   state, first-item preselection on open, mouse drag-rectangle multi-selection,
+   state, Clipboard History reset and first-item preselection on open, mouse drag-rectangle multi-selection,
    left/right keyboard navigation, `Return` paste, `Cmd-A` selection, confirmed
    `Forward Delete` removal, editable card titles, and double-click paste. A
    global mouse monitor hides its floating panel after a click in another app.
@@ -39,7 +39,7 @@
 
 - `AppState` owns the current card selection so filtering, panel reopen, and
   keyboard movement all share one source of truth.
-- Opening the panel refreshes data, selects the first visible item, and bumps a
+- Opening the panel resets to Clipboard History, refreshes data, selects the first visible item, and bumps a
   presentation token so the SwiftUI search field takes focus again.
 - `ClipboardPanelView` installs a local key monitor scoped to the panel window
   so `Left Arrow`, `Right Arrow`, `Return`, `Shift-Return`, and `Forward

@@ -14,7 +14,7 @@ private let pinboardPalette = [
 ]
 
 private let selectedCardOutline = Color(red: 0.84, green: 0.62, blue: 0.26)
-private let pinboardDragType = UTType(exportedAs: "dev.vlv.pastevlv.pinboard")
+private let pinboardDragPrefix = "paste-vlv-pinboard:"
 
 struct ClipboardPanelView: View {
     @ObservedObject var appState: AppState
@@ -172,7 +172,7 @@ struct ClipboardPanelView: View {
                                     }
                                 }
                             }
-                            .onDrop(of: [pinboardDragType, UTType.text], isTargeted: nil) { providers in
+                            .onDrop(of: [UTType.text], isTargeted: nil) { providers in
                                 handlePinboardDrop(providers: providers, targetPinboardID: pinboard.id)
                             }
                         }
@@ -302,19 +302,6 @@ struct ClipboardPanelView: View {
         )
     }
 
-    private func assignDroppedItem(providers: [NSItemProvider], to pinboardID: UUID) -> Bool {
-        guard let provider = providers.first else { return false }
-        provider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { item, _ in
-            let value = item as? Data
-            let idString = value.flatMap { String(data: $0, encoding: .utf8) } ?? item as? String
-            guard let idString, let id = UUID(uuidString: idString) else { return }
-            Task { @MainActor in
-                appState.assign(itemID: id, to: pinboardID)
-            }
-        }
-        return true
-    }
-
     private func resetNewPinboard() {
         newPinboardName = ""
         newPinboardColor = pinboardPalette[0]
@@ -382,35 +369,29 @@ struct ClipboardPanelView: View {
     }
 
     private func pinboardDragProvider(for id: UUID) -> NSItemProvider {
-        let provider = NSItemProvider()
-        provider.registerDataRepresentation(
-            forTypeIdentifier: pinboardDragType.identifier,
-            visibility: .all
-        ) { completion in
-            completion(Data(id.uuidString.utf8), nil)
-            return nil
-        }
-        return provider
+        NSItemProvider(object: "\(pinboardDragPrefix)\(id.uuidString)" as NSString)
     }
 
     private func handlePinboardDrop(providers: [NSItemProvider], targetPinboardID: UUID) -> Bool {
-        if let provider = providers.first(where: {
-            $0.hasItemConformingToTypeIdentifier(pinboardDragType.identifier)
-        }) {
-            provider.loadDataRepresentation(forTypeIdentifier: pinboardDragType.identifier) { data, _ in
-                guard let data,
-                      let idString = String(data: data, encoding: .utf8),
-                      let id = UUID(uuidString: idString) else {
-                    return
-                }
-                Task { @MainActor in
+        guard let provider = providers.first else { return false }
+        provider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { item, _ in
+            let value = item as? Data
+            let rawValue = value.flatMap { String(data: $0, encoding: .utf8) }
+                ?? (item as? String)
+                ?? (item as? NSString).map(String.init)
+
+            guard let rawValue else { return }
+
+            Task { @MainActor in
+                if rawValue.hasPrefix(pinboardDragPrefix),
+                   let id = UUID(uuidString: String(rawValue.dropFirst(pinboardDragPrefix.count))) {
                     appState.reorder(pinboardID: id, before: targetPinboardID)
+                } else if let itemID = UUID(uuidString: rawValue) {
+                    appState.assign(itemID: itemID, to: targetPinboardID)
                 }
             }
-            return true
         }
-
-        return assignDroppedItem(providers: providers, to: targetPinboardID)
+        return true
     }
 
     private func performDeletion(_ request: PendingDeletion) {
@@ -484,22 +465,25 @@ private struct PinboardTab: View {
     let onSelect: () -> Void
 
     var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(Color(hex: colorHex))
-                    .frame(width: 12, height: 12)
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .lineLimit(1)
-            }
-            .foregroundStyle(isSelected ? Color(red: 0.17, green: 0.18, blue: 0.21) : .white.opacity(0.9))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(isSelected ? Color.white.opacity(0.78) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        HStack(spacing: 7) {
+            Circle()
+                .fill(Color(hex: colorHex))
+                .frame(width: 12, height: 12)
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .lineLimit(1)
         }
-        .buttonStyle(.plain)
+        .foregroundStyle(isSelected ? Color(red: 0.17, green: 0.18, blue: 0.21) : .white.opacity(0.9))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(isSelected ? Color.white.opacity(0.78) : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .onTapGesture(perform: onSelect)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
