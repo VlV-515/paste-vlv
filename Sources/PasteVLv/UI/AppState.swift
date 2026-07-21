@@ -191,8 +191,12 @@ final class AppState: ObservableObject {
         refreshAll()
     }
 
-    func reorder(pinboardID: UUID, before targetPinboardID: UUID) {
-        repository.reorderPinboard(id: pinboardID, before: targetPinboardID)
+    func recordUse(itemID: UUID) {
+        repository.recordUse(itemID: itemID)
+    }
+
+    func reorder(pinboardID: UUID, to destinationIndex: Int) {
+        repository.reorderPinboard(id: pinboardID, to: destinationIndex)
         refreshAll()
     }
 

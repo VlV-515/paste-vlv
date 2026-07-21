@@ -1,7 +1,6 @@
 import AppKit
 import LinkPresentation
 import SwiftUI
-import UniformTypeIdentifiers
 
 private let pinboardPalette = [
     "#F85B5B",
@@ -14,7 +13,6 @@ private let pinboardPalette = [
 ]
 
 private let selectedCardOutline = Color(red: 0.84, green: 0.62, blue: 0.26)
-private let pinboardDragPrefix = "paste-vlv-pinboard:"
 
 struct ClipboardPanelView: View {
     @ObservedObject var appState: AppState
@@ -31,6 +29,9 @@ struct ClipboardPanelView: View {
     @State private var pendingDeletion: PendingDeletion?
     @State private var cardFrames: [UUID: CGRect] = [:]
     @State private var selectionDrag: CardSelectionDrag?
+    @State private var pinboardFrames: [UUID: CGRect] = [:]
+    @State private var draggedPinboardID: UUID?
+    @State private var pinboardDropTargetID: UUID?
 
     private var copy: AppCopy {
         AppCopy(language: appState.appLanguage)
@@ -142,9 +143,28 @@ struct ClipboardPanelView: View {
                                 isSelected: appState.selectedPinboardID == pinboard.id,
                                 onSelect: { appState.select(pinboardID: pinboard.id) }
                             )
-                            .onDrag {
-                                pinboardDragProvider(for: pinboard.id)
+                            .background {
+                                GeometryReader { geometry in
+                                    Color.clear.preference(
+                                        key: PinboardFramePreferenceKey.self,
+                                        value: [pinboard.id: geometry.frame(in: .named("pinboard-tabs"))]
+                                    )
+                                }
                             }
+                            .opacity(draggedPinboardID == pinboard.id ? 0.56 : 1)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(Color.white.opacity(pinboardDropTargetID == pinboard.id ? 0.7 : 0), lineWidth: 1)
+                            }
+                            .highPriorityGesture(
+                                DragGesture(minimumDistance: 5, coordinateSpace: .named("pinboard-tabs"))
+                                    .onChanged { value in
+                                        updatePinboardDrag(sourceID: pinboard.id, location: value.location)
+                                    }
+                                    .onEnded { value in
+                                        finishPinboardDrag(sourceID: pinboard.id, location: value.location)
+                                    }
+                            )
                             .contextMenu {
                                 Button(copy.rename) {
                                     editingPinboard = pinboard
@@ -172,11 +192,10 @@ struct ClipboardPanelView: View {
                                     }
                                 }
                             }
-                            .onDrop(of: [UTType.text], isTargeted: nil) { providers in
-                                handlePinboardDrop(providers: providers, targetPinboardID: pinboard.id)
-                            }
                         }
                     }
+                    .coordinateSpace(name: "pinboard-tabs")
+                    .onPreferenceChange(PinboardFramePreferenceKey.self) { pinboardFrames = $0 }
                 }
                 .frame(maxWidth: 520)
 
@@ -368,30 +387,29 @@ struct ClipboardPanelView: View {
         }
     }
 
-    private func pinboardDragProvider(for id: UUID) -> NSItemProvider {
-        NSItemProvider(object: "\(pinboardDragPrefix)\(id.uuidString)" as NSString)
+    private func updatePinboardDrag(sourceID: UUID, location: CGPoint) {
+        draggedPinboardID = sourceID
+        pinboardDropTargetID = pinboardFrames.first { id, frame in
+            id != sourceID && frame.contains(location)
+        }?.key
     }
 
-    private func handlePinboardDrop(providers: [NSItemProvider], targetPinboardID: UUID) -> Bool {
-        guard let provider = providers.first else { return false }
-        provider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { item, _ in
-            let value = item as? Data
-            let rawValue = value.flatMap { String(data: $0, encoding: .utf8) }
-                ?? (item as? String)
-                ?? (item as? NSString).map(String.init)
-
-            guard let rawValue else { return }
-
-            Task { @MainActor in
-                if rawValue.hasPrefix(pinboardDragPrefix),
-                   let id = UUID(uuidString: String(rawValue.dropFirst(pinboardDragPrefix.count))) {
-                    appState.reorder(pinboardID: id, before: targetPinboardID)
-                } else if let itemID = UUID(uuidString: rawValue) {
-                    appState.assign(itemID: itemID, to: targetPinboardID)
-                }
-            }
+    private func finishPinboardDrag(sourceID: UUID, location: CGPoint) {
+        defer {
+            draggedPinboardID = nil
+            pinboardDropTargetID = nil
         }
-        return true
+
+        guard let targetPinboardID = pinboardFrames.first(where: { id, frame in
+            id != sourceID && frame.contains(location)
+        })?.key,
+        let sourceIndex = appState.pinboards.firstIndex(where: { $0.id == sourceID }),
+        let targetIndex = appState.pinboards.firstIndex(where: { $0.id == targetPinboardID }) else {
+            return
+        }
+
+        let destinationIndex = sourceIndex < targetIndex ? targetIndex + 1 : targetIndex
+        appState.reorder(pinboardID: sourceID, to: destinationIndex)
     }
 
     private func performDeletion(_ request: PendingDeletion) {
@@ -451,6 +469,14 @@ private struct CardSelectionDrag {
 }
 
 private struct ClipboardCardFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: CGRect] = [:]
+
+    static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, latest in latest })
+    }
+}
+
+private struct PinboardFramePreferenceKey: PreferenceKey {
     static var defaultValue: [UUID: CGRect] = [:]
 
     static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {

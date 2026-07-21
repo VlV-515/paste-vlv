@@ -10,6 +10,8 @@ final class ClipboardRepository {
     }
 
     func bootstrapPinboardsIfNeeded(language: AppLanguage) {
+        backfillLastUsedDates()
+
         let request = NSFetchRequest<PinboardEntity>(entityName: "PinboardEntity")
         request.fetchLimit = 1
 
@@ -60,10 +62,15 @@ final class ClipboardRepository {
     ) -> [ClipboardItem] {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
         request.fetchLimit = limit
-        request.sortDescriptors = [
-            NSSortDescriptor(key: "isPinned", ascending: false),
-            NSSortDescriptor(key: "createdAt", ascending: false)
-        ]
+        request.sortDescriptors = pinboardID == nil
+            ? [
+                NSSortDescriptor(key: "lastUsedAt", ascending: false),
+                NSSortDescriptor(key: "createdAt", ascending: false)
+            ]
+            : [
+                NSSortDescriptor(key: "isPinned", ascending: false),
+                NSSortDescriptor(key: "createdAt", ascending: false)
+            ]
 
         var predicates: [NSPredicate] = []
         if let pinboardID {
@@ -102,7 +109,9 @@ final class ClipboardRepository {
         let hash = Self.hash(content.rawHashInput)
 
         if let existing = existingItem(hash: hash) {
-            existing.createdAt = Date()
+            let now = Date()
+            existing.createdAt = now
+            existing.lastUsedAt = now
             existing.sourceAppName = content.sourceAppName
             existing.sourceAppBundleID = content.sourceAppBundleID
             save()
@@ -122,6 +131,7 @@ final class ClipboardRepository {
         item.sourceAppName = content.sourceAppName
         item.sourceAppBundleID = content.sourceAppBundleID
         item.createdAt = Date()
+        item.lastUsedAt = item.createdAt
         item.contentHash = hash
         item.isFavorite = false
         item.isPinned = false
@@ -201,16 +211,24 @@ final class ClipboardRepository {
         save()
     }
 
-    func reorderPinboard(id: UUID, before targetID: UUID) {
+    func recordUse(itemID: UUID) {
+        guard let item = findItem(id: itemID) else { return }
+        item.lastUsedAt = Date()
+        save()
+    }
+
+    func reorderPinboard(id: UUID, to destinationIndex: Int) {
         var pinboards = fetchPinboards()
-        guard id != targetID,
-              let sourceIndex = pinboards.firstIndex(where: { $0.id == id }) else {
+        guard let sourceIndex = pinboards.firstIndex(where: { $0.id == id }) else {
             return
         }
 
         let moved = pinboards.remove(at: sourceIndex)
-        guard let targetIndex = pinboards.firstIndex(where: { $0.id == targetID }) else { return }
-        pinboards.insert(moved, at: targetIndex)
+        let adjustedDestination = destinationIndex > sourceIndex
+            ? destinationIndex - 1
+            : destinationIndex
+        let insertionIndex = min(max(adjustedDestination, 0), pinboards.count)
+        pinboards.insert(moved, at: insertionIndex)
 
         for (index, pinboard) in pinboards.enumerated() {
             findPinboard(id: pinboard.id)?.sortOrder = Int16(index)
@@ -328,6 +346,7 @@ final class ClipboardRepository {
             entity.sourceAppName = snapshot.sourceAppName
             entity.sourceAppBundleID = snapshot.sourceAppBundleID
             entity.createdAt = snapshot.createdAt
+            entity.lastUsedAt = snapshot.createdAt
             entity.contentHash = snapshot.contentHash
             entity.isFavorite = snapshot.isFavorite
             entity.isPinned = snapshot.isPinned
@@ -363,6 +382,18 @@ final class ClipboardRepository {
         request.fetchLimit = 1
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         return try? context.fetch(request).first
+    }
+
+    private func backfillLastUsedDates() {
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.predicate = NSPredicate(format: "lastUsedAt == nil")
+
+        do {
+            try context.fetch(request).forEach { $0.lastUsedAt = $0.createdAt }
+            save()
+        } catch {
+            NSLog("Unable to migrate clipboard usage dates: \(error.localizedDescription)")
+        }
     }
 
     private func save() {

@@ -16,7 +16,7 @@
 1. `PasteVLvMain` starts `NSApplication` as an accessory menu bar app.
 2. `AppDelegate` wires persistence, app state, the clipboard monitor, the hotkey,
    the status menu, the preferences window, and the SwiftUI panel.
-3. `ClipboardMonitor` watches `NSPasteboard.general.changeCount` and ignores writes initiated by `PasteController`, preventing a selected saved card from being recaptured or reordered.
+3. `ClipboardMonitor` watches `NSPasteboard.general.changeCount` and ignores writes initiated by `PasteController`. That use is recorded separately for Clipboard History order, without changing the saved card's group order or source identity.
 4. Captured text, links, files, and images are normalized into
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.

@@ -15,6 +15,7 @@ final class ClipboardItemEntity: NSManagedObject {
     @NSManaged var sourceAppName: String?
     @NSManaged var sourceAppBundleID: String?
     @NSManaged var createdAt: Date
+    @NSManaged var lastUsedAt: Date?
     @NSManaged var contentHash: String
     @NSManaged var isFavorite: Bool
     @NSManaged var isPinned: Bool
@@ -45,6 +46,7 @@ extension ClipboardItemEntity {
             sourceAppName: sourceAppName,
             sourceAppBundleID: sourceAppBundleID,
             createdAt: createdAt,
+            lastUsedAt: lastUsedAt ?? createdAt,
             contentHash: contentHash,
             isFavorite: isFavorite,
             isPinned: isPinned,

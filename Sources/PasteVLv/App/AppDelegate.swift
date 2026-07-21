@@ -116,8 +116,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureClipboardMonitor() {
-        pasteController.onPasteboardWrite = { [weak self] in
+        pasteController.onPasteboardWrite = { [weak self] item in
             self?.clipboardMonitor.ignoreCurrentPasteboardChange()
+            self?.appState.recordUse(itemID: item.id)
         }
         clipboardMonitor.onCapture = { [weak self] item in
             Task { @MainActor in

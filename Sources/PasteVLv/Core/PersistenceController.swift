@@ -87,6 +87,7 @@ final class PersistenceController {
             attribute("sourceAppName", .stringAttributeType, optional: true),
             attribute("sourceAppBundleID", .stringAttributeType, optional: true),
             attribute("createdAt", .dateAttributeType),
+            attribute("lastUsedAt", .dateAttributeType, optional: true),
             attribute("contentHash", .stringAttributeType),
             attribute("isFavorite", .booleanAttributeType, defaultValue: false),
             attribute("isPinned", .booleanAttributeType, defaultValue: false),

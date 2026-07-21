@@ -129,7 +129,7 @@ Without Direct Paste, selecting an item still places it on the regular clipboard
 
 ### Capture, search, and paste
 
-Copy something in any app. Paste-vlv watches the standard macOS clipboard and stores normalized text, links, images, and file references locally. Duplicate content is recognized, so copying the same thing again refreshes that item instead of flooding the history. Choosing a saved card does not recapture or alter it.
+Copy something in any app. Paste-vlv watches the standard macOS clipboard and stores normalized text, links, images, and file references locally. Duplicate content is recognized, so copying the same thing again refreshes that item instead of flooding the history. Choosing a saved grouped card promotes it in Clipboard History without changing its group order, color, or source app.
 
 Open the panel and start typing: search is focused automatically. Each opening starts in **Clipboard History**, so a pinboard is only shown after you select it. Results match copied content, preview text, URLs, and the source app name.
 

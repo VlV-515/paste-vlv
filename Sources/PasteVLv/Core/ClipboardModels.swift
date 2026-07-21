@@ -23,6 +23,7 @@ struct ClipboardItem: Identifiable, Equatable {
     let sourceAppName: String?
     let sourceAppBundleID: String?
     let createdAt: Date
+    let lastUsedAt: Date
     let contentHash: String
     let isFavorite: Bool
     let isPinned: Bool
