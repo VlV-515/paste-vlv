@@ -28,56 +28,65 @@ struct PreferencesView: View {
 
 struct AboutView: View {
     let language: AppLanguage
+    let expanded: Bool
+
+    init(language: AppLanguage, expanded: Bool = false) {
+        self.language = language
+        self.expanded = expanded
+    }
 
     private var copy: AppCopy { AppCopy(language: language) }
+    private var topSpacing: CGFloat { expanded ? 118 : 56 }
+    private var iconSize: CGFloat { expanded ? 96 : 72 }
+    private var horizontalInset: CGFloat { expanded ? 170 : 128 }
 
     var body: some View {
         ZStack {
             Color(red: 0.125, green: 0.137, blue: 0.22)
 
             VStack(spacing: 0) {
-                Spacer(minLength: 56)
+                Spacer(minLength: topSpacing)
 
                 AboutApplicationIcon()
-                    .frame(width: 72, height: 72)
+                    .frame(width: iconSize, height: iconSize)
 
                 Text(AppBranding.displayName)
-                    .font(.system(size: 24, weight: .bold))
-                    .padding(.top, 28)
+                    .font(.system(size: expanded ? 29 : 24, weight: .bold))
+                    .padding(.top, expanded ? 36 : 28)
 
                 Text("\(copy.version) \(AppBranding.version)")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: expanded ? 14 : 13, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.62))
-                    .padding(.top, 6)
+                    .padding(.top, expanded ? 8 : 6)
 
                 Divider()
                     .overlay(.white.opacity(0.16))
-                    .padding(.top, 30)
-                    .padding(.horizontal, 128)
+                    .padding(.top, expanded ? 52 : 30)
+                    .padding(.horizontal, horizontalInset)
 
                 Text("\(copy.createdBy) VlV")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: expanded ? 15 : 14, weight: .medium))
                     .foregroundStyle(.white.opacity(0.68))
-                    .padding(.top, 28)
+                    .padding(.top, expanded ? 42 : 28)
 
                 HStack(spacing: 10) {
-                    AboutLink(title: copy.developerGitHub, systemImage: "person.crop.circle", url: AppBranding.developerURL)
-                    AboutLink(title: copy.projectGitHub, systemImage: "chevron.left.forwardslash.chevron.right", url: AppBranding.projectURL)
-                    AboutLink(title: copy.license, systemImage: "doc.text", url: AppBranding.licenseURL)
+                    AboutLink(title: copy.developerGitHub, systemImage: "person.crop.circle", url: AppBranding.developerURL, expanded: expanded)
+                    AboutLink(title: copy.projectGitHub, systemImage: "chevron.left.forwardslash.chevron.right", url: AppBranding.projectURL, expanded: expanded)
+                    AboutLink(title: copy.license, systemImage: "doc.text", url: AppBranding.licenseURL, expanded: expanded)
                 }
-                .padding(.top, 14)
+                .padding(.top, expanded ? 20 : 14)
 
-                Spacer(minLength: 36)
+                Spacer(minLength: expanded ? 92 : 36)
 
                 Divider()
                     .overlay(.white.opacity(0.16))
-                    .padding(.horizontal, 128)
+                    .padding(.horizontal, horizontalInset)
 
                 Text(copy.copyright)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: expanded ? 12 : 11, weight: .medium))
                     .foregroundStyle(.white.opacity(0.56))
-                    .padding(.top, 15)
-                    .padding(.bottom, 25)
+                    .padding(.top, expanded ? 20 : 15)
+                    .padding(.bottom, expanded ? 38 : 25)
             }
         }
         .foregroundStyle(.white)
@@ -99,16 +108,17 @@ private struct AboutLink: View {
     let title: String
     let systemImage: String
     let url: URL
+    let expanded: Bool
 
     var body: some View {
         Link(destination: url) {
             Label(title, systemImage: systemImage)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: expanded ? 14 : 12, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.86))
                 .lineLimit(1)
-                .padding(.horizontal, 12)
-                .frame(height: 26)
-                .background(.white.opacity(0.11), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .padding(.horizontal, expanded ? 17 : 12)
+                .frame(height: expanded ? 34 : 26)
+                .background(.white.opacity(0.11), in: RoundedRectangle(cornerRadius: expanded ? 8 : 6, style: .continuous))
         }
     }
 }

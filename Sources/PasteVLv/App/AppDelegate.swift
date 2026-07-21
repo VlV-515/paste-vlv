@@ -159,7 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.updateStatusMenu()
                 self?.preferencesWindow?.title = AppCopy(language: language).preferences
                 self?.aboutWindow?.title = AppCopy(language: language).about
-                self?.aboutWindow?.contentViewController = NSHostingController(rootView: AboutView(language: language))
+                self?.aboutWindow?.contentViewController = NSHostingController(rootView: AboutView(language: language, expanded: true))
             }
             .store(in: &cancellables)
 
@@ -213,7 +213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showAbout() {
         if aboutWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 620, height: 660),
+                contentRect: NSRect(x: 0, y: 0, width: 800, height: 860),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
@@ -221,7 +221,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.title = AppCopy(language: settings.appLanguage).about
             window.isReleasedWhenClosed = false
             window.center()
-            window.contentViewController = NSHostingController(rootView: AboutView(language: settings.appLanguage))
+            window.contentViewController = NSHostingController(rootView: AboutView(language: settings.appLanguage, expanded: true))
             aboutWindow = window
         }
 
