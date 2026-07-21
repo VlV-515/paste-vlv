@@ -180,10 +180,6 @@ struct AppCopy {
         choose("\(count) characters", "\(count) caracteres")
     }
 
-    func groupReference(_ name: String) -> String {
-        choose("Group: \(name)", "Grupo: \(name)")
-    }
-
     func itemKindDetail(_ kind: ClipboardKind) -> String {
         switch kind {
         case .image: return choose("image", "imagen")

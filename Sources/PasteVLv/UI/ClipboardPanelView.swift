@@ -619,8 +619,8 @@ private struct ClipboardCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(
-                    isSelected ? selectedCardOutline : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.12 : 0.72),
-                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 2)
+                    cardOutlineColor,
+                    lineWidth: cardOutlineWidth
                 )
         )
         .overlay(
@@ -636,7 +636,7 @@ private struct ClipboardCard: View {
                 .padding(.bottom, 4),
             alignment: .bottom
         )
-        .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.34), radius: isSelected ? 10 : 7, y: 3)
+        .shadow(color: cardShadowColor, radius: isSelected || isShowingPinboardReference ? 10 : 7, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .background(CardPointerMonitor(onMouseDown: onSelect, dragPayload: dragPayload))
         .onTapGesture(count: 2, perform: onPaste)
@@ -672,7 +672,9 @@ private struct ClipboardCard: View {
                     .opacity(0.85)
             }
             Spacer()
-            sourceIcon
+            if !isShowingPinboardReference {
+                sourceIcon
+            }
         }
         .foregroundStyle(.white)
         .padding(.leading, 13)
@@ -681,7 +683,7 @@ private struct ClipboardCard: View {
         .frame(height: 58)
         .background(
             LinearGradient(
-                colors: [Color(hex: sourceColorHex), Color(hex: sourceColorHex).opacity(0.78)],
+                colors: [Color(hex: headerColorHex), Color(hex: headerColorHex).opacity(0.78)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -824,15 +826,20 @@ private struct ClipboardCard: View {
 
     @ViewBuilder
     private var footerDetailView: some View {
-        if showsPinboardReference, let pinboardName {
-            HStack(spacing: 4) {
+        if isShowingPinboardReference, let pinboardName {
+            HStack(spacing: 5) {
                 Circle()
                     .fill(Color(hex: accentHex))
-                    .frame(width: 7, height: 7)
-                Text(copy.groupReference(pinboardName))
+                    .frame(width: 7.5, height: 7.5)
+                Text(pinboardName)
+                    .font(.system(size: 10, weight: .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(.white.opacity(0.78))
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Color(hex: accentHex).opacity(0.18))
+            .clipShape(Capsule())
         } else {
             Text(footerDetail)
                 .lineLimit(1)
@@ -852,6 +859,35 @@ private struct ClipboardCard: View {
 
     private var defaultTitle: String {
         item.kind == .file ? copy.files(filePaths.count) : copy.clipboardKindTitle(item.kind)
+    }
+
+    private var isShowingPinboardReference: Bool {
+        showsPinboardReference && pinboardName != nil
+    }
+
+    private var headerColorHex: String {
+        isShowingPinboardReference ? accentHex : sourceColorHex
+    }
+
+    private var cardOutlineColor: Color {
+        if isSelected {
+            return selectedCardOutline
+        }
+        return Color(hex: accentHex).opacity(isShowingPinboardReference ? 0.96 : (item.pinboardID == nil ? 0.12 : 0.72))
+    }
+
+    private var cardOutlineWidth: CGFloat {
+        if isSelected {
+            return 4
+        }
+        return isShowingPinboardReference ? 3 : (item.pinboardID == nil ? 1 : 2)
+    }
+
+    private var cardShadowColor: Color {
+        if isSelected {
+            return selectedCardOutline.opacity(0.18)
+        }
+        return isShowingPinboardReference ? Color(hex: accentHex).opacity(0.24) : .black.opacity(0.34)
     }
 
     private var filePaths: [String] {
