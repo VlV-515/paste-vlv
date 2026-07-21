@@ -1290,7 +1290,7 @@ private struct CardPointerMonitor: NSViewRepresentable {
             path.lineWidth = 1
             path.stroke()
 
-            let title = NSString(string: "PasteVLv")
+            let title = NSString(string: AppBranding.displayName)
             title.draw(
                 in: NSRect(x: 16, y: 14, width: size.width - 32, height: 18),
                 withAttributes: [

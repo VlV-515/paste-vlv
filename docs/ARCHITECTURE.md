@@ -1,4 +1,4 @@
-# Paste-vlv Architecture
+# Paste vlv Architecture
 
 ## Stack
 

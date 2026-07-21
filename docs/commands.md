@@ -36,12 +36,12 @@ Tradeoff:
 
 ### `./scripts/package-app.sh`
 
-Creates a local macOS app bundle at `dist/Paste-vlv.app`.
+Creates a local macOS app bundle at `dist/Paste vlv.app`.
 
 What the script does:
 
 - Runs `swift build -c release`.
-- Recreates `dist/Paste-vlv.app`.
+- Recreates `dist/Paste vlv.app`.
 - Copies the release binary and icon into the bundle.
 - Writes `Info.plist`.
 - Applies ad-hoc signing with `codesign`.
@@ -72,13 +72,13 @@ and notarized.
 
 ## Open The Packaged App
 
-### `open dist/Paste-vlv.app`
+### `open "dist/Paste vlv.app"`
 
 Launches the packaged app bundle from Finder services.
 
 Use it when:
 
-- You already generated `dist/Paste-vlv.app`.
+- You already generated `dist/Paste vlv.app`.
 - You want to test the packaged app experience.
 
 For agents:
@@ -104,7 +104,7 @@ swift run Paste-vlv
 
 ```sh
 ./scripts/package-app.sh
-open dist/Paste-vlv.app
+open "dist/Paste vlv.app"
 ```
 
 ### Build GitHub Release assets
@@ -127,8 +127,8 @@ open dist/Paste-vlv.app
 
 ## Notes
 
-- `Paste-vlv` is the executable and `.app` name. `PasteVLv` is the Swift target
-  name in source code.
+- `Paste-vlv` is the executable name for SwiftPM. `Paste vlv.app` is the
+  packaged app name. `PasteVLv` is the Swift target name in source code.
 - For direct paste into other apps, macOS needs Accessibility permission for
   the packaged app.
 - Group backup and restore are UI actions, not CLI commands:

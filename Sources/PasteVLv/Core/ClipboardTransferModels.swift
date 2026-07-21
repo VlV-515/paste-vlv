@@ -161,7 +161,7 @@ enum ClipboardTransferError: LocalizedError {
         case .unsupportedItemKind(let kind):
             return english ? "The JSON only supports grouped text. Unsupported item: \(kind.rawValue)." : "El JSON solo admite textos agrupados. Item no soportado: \(kind.rawValue)."
         case .invalidArchive:
-            return english ? "The file does not match a valid Paste-vlv backup structure." : "El archivo no cumple estructura válida de respaldo Paste-vlv."
+            return english ? "The file does not match a valid Paste vlv backup structure." : "El archivo no cumple estructura válida de respaldo Paste vlv."
         }
     }
 }

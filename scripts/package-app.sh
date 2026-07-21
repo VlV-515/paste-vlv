@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="Paste-vlv"
+APP_DISPLAY_NAME="Paste vlv"
+EXECUTABLE_NAME="Paste-vlv"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_DIR="$ROOT_DIR/dist/$APP_NAME.app"
+APP_DIR="$ROOT_DIR/dist/$APP_DISPLAY_NAME.app"
+LEGACY_APP_DIR="$ROOT_DIR/dist/Paste-vlv.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -15,10 +17,10 @@ CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 cd "$ROOT_DIR"
 swift build -c release
 
-rm -rf "$APP_DIR"
+rm -rf "$APP_DIR" "$LEGACY_APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-cp ".build/release/$APP_NAME" "$MACOS_DIR/$APP_NAME"
+cp ".build/release/$EXECUTABLE_NAME" "$MACOS_DIR/$EXECUTABLE_NAME"
 cp "$ICON_FILE" "$RESOURCES_DIR/AppIcon.icns"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -29,17 +31,17 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleExecutable</key>
-  <string>$APP_NAME</string>
+  <string>$EXECUTABLE_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>dev.vlv.pastevlv</string>
   <key>CFBundleDisplayName</key>
-  <string>$APP_NAME</string>
+  <string>$APP_DISPLAY_NAME</string>
   <key>CFBundleIconFile</key>
   <string>AppIcon</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>$APP_NAME</string>
+  <string>$APP_DISPLAY_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -56,7 +58,7 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 </plist>
 PLIST
 
-chmod +x "$MACOS_DIR/$APP_NAME"
+chmod +x "$MACOS_DIR/$EXECUTABLE_NAME"
 if [[ "$CODESIGN_IDENTITY" == "-" ]]; then
   codesign --force --deep --sign - "$APP_DIR"
   echo "Ad-hoc signed $APP_DIR"

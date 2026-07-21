@@ -1,12 +1,12 @@
 # Release Guide
 
-Paste-vlv releases are published through GitHub Releases.
+Paste vlv releases are published through GitHub Releases.
 
 ## Current Distribution State
 
 The current public build is an unsigned release:
 
-- `scripts/package-app.sh` creates `dist/Paste-vlv.app`.
+- `scripts/package-app.sh` creates `dist/Paste vlv.app`.
 - `scripts/package-release.sh` creates a ZIP archive and SHA-256 checksum.
 - The app is ad-hoc signed unless `CODESIGN_IDENTITY` is set.
 - A free Apple Developer account cannot create a Developer ID certificate for
@@ -24,7 +24,7 @@ swift build
 Generated files:
 
 ```text
-dist/Paste-vlv.app
+dist/Paste vlv.app
 dist/Paste-vlv-1.2.0-macos-unsigned.zip
 dist/Paste-vlv-1.2.0-macos-unsigned.zip.sha256
 ```
@@ -45,7 +45,7 @@ If `gh` is installed and authenticated:
 gh release create v1.2.0 \
   dist/Paste-vlv-1.2.0-macos-unsigned.zip \
   dist/Paste-vlv-1.2.0-macos-unsigned.zip.sha256 \
-  --title "Paste-vlv v1.2.0" \
+  --title "Paste vlv v1.2.0" \
   --notes-file .github/release-notes/v1.2.0.md
 ```
 
@@ -55,7 +55,7 @@ gh release create v1.2.0 \
 2. Go to Releases.
 3. Choose Draft a new release.
 4. Select tag `v1.2.0`.
-5. Set title `Paste-vlv v1.2.0`.
+5. Set title `Paste vlv v1.2.0`.
 6. Paste `.github/release-notes/v1.2.0.md`.
 7. Upload:
    - `dist/Paste-vlv-1.2.0-macos-unsigned.zip`

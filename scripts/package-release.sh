@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_NAME="Paste-vlv"
+APP_BUNDLE_NAME="Paste vlv"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 VERSION="${1:-1.2.0}"
@@ -17,7 +18,7 @@ rm -f "$ARCHIVE_PATH" "$CHECKSUM_PATH"
 
 (
   cd "$DIST_DIR"
-  ditto -c -k --keepParent "$APP_NAME.app" "$ARCHIVE_NAME"
+  ditto -c -k --keepParent "$APP_BUNDLE_NAME.app" "$ARCHIVE_NAME"
 )
 
 (

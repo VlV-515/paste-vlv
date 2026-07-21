@@ -1,4 +1,4 @@
-# Paste-vlv Agent Guide
+# Paste vlv Agent Guide
 
 - Always use the local `caveman` skill in `ultra` mode for this project.
 
@@ -26,9 +26,9 @@ Treat it as a native macOS utility, not a web app.
 
 - `swift build`: compile debug build and validate source changes.
 - `swift run Paste-vlv`: run latest local code directly from SwiftPM.
-- `./scripts/package-app.sh`: create `dist/Paste-vlv.app` with a release build,
+- `./scripts/package-app.sh`: create `dist/Paste vlv.app` with a release build,
   bundle metadata, and ad-hoc signing.
-- `open dist/Paste-vlv.app`: launch packaged app only when the user explicitly
+- `open "dist/Paste vlv.app"`: launch packaged app only when the user explicitly
   asks to open it.
 
 Full command reference: `docs/commands.md`

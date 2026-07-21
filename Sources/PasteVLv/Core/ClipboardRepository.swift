@@ -458,7 +458,7 @@ final class ClipboardRepository {
             schemaVersion: ClipboardHistoryArchive.currentSchemaVersion,
             exportedAt: exportedAt,
             exportedBy: ClipboardHistoryExporter(
-                appName: "Paste-vlv",
+                appName: "Paste vlv",
                 bundleIdentifier: Bundle.main.bundleIdentifier ?? "dev.vlv.pastevlv",
                 platform: "macOS"
             ),

@@ -99,7 +99,7 @@ struct AppCopy {
     var exportComplete: String { choose("Export complete", "Exportación completada") }
     var exportFailed: String { choose("Could not export", "No se pudo exportar") }
     var importTitle: String { choose("Import groups", "Importar grupos") }
-    var importMessage: String { choose("Select a JSON backup of grouped text exported from Paste-vlv.", "Selecciona un respaldo JSON de grupos con textos agrupados exportado desde Paste-vlv.") }
+    var importMessage: String { choose("Select a JSON backup of grouped text exported from Paste vlv.", "Selecciona un respaldo JSON de grupos con textos agrupados exportado desde Paste vlv.") }
     var importComplete: String { choose("Import complete", "Importación completada") }
     var importFailed: String { choose("Could not import", "No se pudo importar") }
     var file: String { choose("File", "Archivo") }

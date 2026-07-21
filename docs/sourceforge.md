@@ -1,6 +1,6 @@
 # SourceForge Mirror
 
-SourceForge is a secondary mirror for Paste-vlv release files. GitHub Releases
+SourceForge is a secondary mirror for Paste vlv release files. GitHub Releases
 remain the primary release source.
 
 Project:
@@ -12,7 +12,7 @@ Project:
 
 ## What SourceForge Needs
 
-Paste-vlv uses `paste-vlv` as the SourceForge project URL name. SourceForge uses
+Paste vlv uses `paste-vlv` as the SourceForge project URL name. SourceForge uses
 that value as `PROJECTNAME` in file paths.
 
 SourceForge file releases can be managed through the web File Manager or through

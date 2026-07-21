@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_NAME="Paste-vlv"
+APP_BUNDLE_NAME="Paste vlv"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${1:-1.2.0}"
 TAG="v$VERSION"
@@ -21,7 +22,7 @@ cp "$DIST_DIR/$ARCHIVE_NAME" "$SOURCEFORGE_DIR/$ARCHIVE_NAME"
 cp "$DIST_DIR/$CHECKSUM_NAME" "$SOURCEFORGE_DIR/$CHECKSUM_NAME"
 
 cat > "$SOURCEFORGE_DIR/readme.md" <<README
-# Paste-vlv $TAG
+# Paste vlv $TAG
 
 Native local-first clipboard manager for macOS.
 
@@ -40,7 +41,7 @@ Use:
 ## Install
 
 1. Download and unzip \`$ARCHIVE_NAME\`.
-2. Move \`Paste-vlv.app\` to \`/Applications\`.
+2. Move \`$APP_BUNDLE_NAME.app\` to \`/Applications\`.
 3. Open the app.
 4. Enable Accessibility permission in System Settings when using Direct Paste.
 
