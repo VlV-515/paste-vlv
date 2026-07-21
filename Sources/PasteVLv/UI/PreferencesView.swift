@@ -16,8 +16,109 @@ struct PreferencesView: View {
                 .tabItem {
                     Label(AppCopy(language: appState.appLanguage).shortcuts, systemImage: "command")
                 }
+
+            AboutView(language: appState.appLanguage)
+                .tabItem {
+                    Label(AppCopy(language: appState.appLanguage).aboutTab, systemImage: "info.circle")
+                }
         }
         .frame(width: 620, height: 460)
+    }
+}
+
+struct AboutView: View {
+    let language: AppLanguage
+
+    private var copy: AppCopy { AppCopy(language: language) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 10) {
+                AppIcon()
+                    .frame(width: 76, height: 76)
+
+                Text(AppBranding.displayName)
+                    .font(.system(size: 25, weight: .medium))
+
+                Text("\(copy.version) \(AppBranding.version) (\(AppBranding.build))")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+                .padding(.vertical, 24)
+                .padding(.horizontal, 52)
+
+            VStack(spacing: 18) {
+                Text("\(copy.createdBy) VlV")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 30) {
+                    AboutLink(title: copy.developerGitHub, systemImage: "person.crop.circle", url: AppBranding.developerURL)
+                    AboutLink(title: copy.projectGitHub, systemImage: "chevron.left.forwardslash.chevron.right", url: AppBranding.projectURL)
+                }
+            }
+
+            Spacer(minLength: 24)
+
+            VStack(spacing: 7) {
+                Text(copy.license)
+                    .font(.system(size: 12, weight: .medium))
+                Text(copy.copyright)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(.top, 34)
+        .padding(.bottom, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct AppIcon: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [Color(red: 0.18, green: 0.58, blue: 0.98), Color(red: 0.27, green: 0.20, blue: 0.79)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay {
+                Image(systemName: "doc.on.clipboard.fill")
+                    .font(.system(size: 34, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .shadow(color: .black.opacity(0.16), radius: 7, y: 3)
+    }
+}
+
+private struct AboutLink: View {
+    let title: String
+    let systemImage: String
+    let url: URL
+
+    var body: some View {
+        Link(destination: url) {
+            VStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 25, weight: .medium))
+                    .frame(width: 52, height: 52)
+                    .overlay {
+                        Circle()
+                            .stroke(Color.accentColor.opacity(0.55), lineWidth: 1)
+                    }
+                Text(title)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .frame(width: 104)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

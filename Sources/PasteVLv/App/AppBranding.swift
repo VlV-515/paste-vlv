@@ -2,6 +2,10 @@ import AppKit
 
 enum AppBranding {
     static let displayName = "Paste-vlv"
+    static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+    static let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+    static let developerURL = URL(string: "https://github.com/VlV-515")!
+    static let projectURL = URL(string: "https://github.com/VlV-515/paste-vlv")!
 
     static func makeMenuBarIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)

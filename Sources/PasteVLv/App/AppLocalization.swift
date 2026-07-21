@@ -30,6 +30,7 @@ struct AppCopy {
 
     var showApp: String { choose("Show \(AppBranding.displayName)", "Mostrar \(AppBranding.displayName)") }
     var preferences: String { choose("Preferences...", "Preferencias...") }
+    var about: String { choose("About \(AppBranding.displayName)", "Acerca de \(AppBranding.displayName)") }
     var exportGroups: String { choose("Export groups...", "Exportar grupos...") }
     var importGroups: String { choose("Import groups...", "Importar grupos...") }
     var pauseCapture: String { choose("Pause Capture", "Pausar captura") }
@@ -39,6 +40,13 @@ struct AppCopy {
 
     var general: String { choose("General", "General") }
     var shortcuts: String { choose("Shortcuts", "Atajos") }
+    var aboutTab: String { choose("About", "Acerca de") }
+    var version: String { choose("Version", "Versión") }
+    var createdBy: String { choose("Created by", "Creado por") }
+    var license: String { choose("MIT License", "Licencia MIT") }
+    var developerGitHub: String { choose("Developer GitHub", "GitHub del desarrollador") }
+    var projectGitHub: String { choose("Project GitHub", "GitHub del proyecto") }
+    var copyright: String { choose("© 2026 VlV. All rights reserved.", "© 2026 VlV. Todos los derechos reservados.") }
     var languageLabel: String { choose("Language:", "Idioma:") }
     var launch: String { choose("Launch:", "Arranque:") }
     var integration: String { choose("Integration:", "Integración:") }

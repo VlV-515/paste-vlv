@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var panel: NSPanel?
     private var preferencesWindow: NSWindow?
+    private var aboutWindow: NSWindow?
     private var pasteTargetApplication: NSRunningApplication?
     private var outsidePanelClickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
@@ -61,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let copy = AppCopy(language: settings.appLanguage)
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: copy.showApp, action: #selector(showPanelFromMenu), keyEquivalent: "v"))
+        menu.addItem(NSMenuItem(title: copy.about, action: #selector(showAboutFromMenu), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: copy.preferences, action: #selector(showPreferencesFromMenu), keyEquivalent: ","))
         menu.addItem(NSMenuItem(title: copy.exportGroups, action: #selector(exportHistoryFromMenu), keyEquivalent: "e"))
         menu.addItem(NSMenuItem(title: copy.importGroups, action: #selector(importHistoryFromMenu), keyEquivalent: "i"))
@@ -156,6 +158,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] language in
                 self?.updateStatusMenu()
                 self?.preferencesWindow?.title = AppCopy(language: language).preferences
+                self?.aboutWindow?.title = AppCopy(language: language).about
+                self?.aboutWindow?.contentViewController = NSHostingController(rootView: AboutView(language: language))
             }
             .store(in: &cancellables)
 
@@ -204,6 +208,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.activate(ignoringOtherApps: true)
         preferencesWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func showAbout() {
+        if aboutWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 430, height: 470),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = AppCopy(language: settings.appLanguage).about
+            window.isReleasedWhenClosed = false
+            window.center()
+            window.contentViewController = NSHostingController(rootView: AboutView(language: settings.appLanguage))
+            aboutWindow = window
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        aboutWindow?.makeKeyAndOrderFront(nil)
     }
 
     private func handlePaste(item: ClipboardItem, plainText: Bool) {
@@ -263,6 +286,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showPreferencesFromMenu() {
         showPreferences()
+    }
+
+    @objc private func showAboutFromMenu() {
+        showAbout()
     }
 
     @objc private func exportHistoryFromMenu() {
