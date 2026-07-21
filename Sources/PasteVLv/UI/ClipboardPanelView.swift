@@ -587,6 +587,7 @@ private struct ClipboardCard: View {
     let onTitleEditingChanged: (Bool) -> Void
     @State private var isEditingTitle = false
     @State private var titleDraft = ""
+    @State private var didSelectOnPress = false
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -620,9 +621,7 @@ private struct ClipboardCard: View {
         )
         .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.34), radius: isSelected ? 10 : 7, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .onTapGesture {
-            onSelect()
-        }
+        .simultaneousGesture(instantSelectionGesture)
         .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
             Button(copy.paste) { onPaste() }
@@ -645,6 +644,18 @@ private struct ClipboardCard: View {
                 Text(copy.delete)
             }
         }
+    }
+
+    private var instantSelectionGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                guard !didSelectOnPress else { return }
+                didSelectOnPress = true
+                onSelect()
+            }
+            .onEnded { _ in
+                didSelectOnPress = false
+            }
     }
 
     private var header: some View {
