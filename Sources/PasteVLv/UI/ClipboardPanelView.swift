@@ -1,4 +1,5 @@
 import AppKit
+import LinkPresentation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -28,6 +29,8 @@ struct ClipboardPanelView: View {
     @State private var newPinboardName = ""
     @State private var newPinboardColor = pinboardPalette[0]
     @State private var pendingDeletion: PendingDeletion?
+    @State private var cardFrames: [UUID: CGRect] = [:]
+    @State private var selectionDrag: CardSelectionDrag?
 
     private var copy: AppCopy {
         AppCopy(language: appState.appLanguage)
@@ -198,39 +201,68 @@ struct ClipboardPanelView: View {
                 emptyState
             } else {
                 ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(alignment: .top, spacing: 20) {
-                            ForEach(Array(appState.items.enumerated()), id: \.element.id) { index, item in
-                                ClipboardCard(
-                                    item: item,
-                                    index: index,
-                                    accentHex: appState.colorHex(for: item),
-                                    sourceColorHex: ClipboardSourceAppearance.colorHex(for: item),
-                                    pinboardName: appState.pinboardName(for: item),
-                                    pinboards: appState.pinboards,
-                                    copy: AppCopy(language: appState.appLanguage),
-                                    isSelected: appState.selectedItemIDs.contains(item.id),
-                                    onSelect: { appState.selectItem(id: item.id) },
-                                    onPaste: { onPaste(item, false) },
-                                    onPastePlain: { onPaste(item, true) },
-                                    onFavorite: { appState.toggleFavorite(itemID: item.id) },
-                                    onPin: { appState.togglePinned(itemID: item.id) },
-                                    onDelete: { pendingDeletion = .items([item.id]) },
-                                    onAssign: { appState.assign(itemID: item.id, to: $0) },
-                                    onRename: { appState.updateTitle(itemID: item.id, title: $0) },
-                                    onTitleEditingChanged: { isEditingItemTitle = $0 }
-                                )
-                                .id(item.id)
-                                .onDrag {
-                                    NSItemProvider(object: item.id.uuidString as NSString)
+                    ZStack(alignment: .topLeading) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(alignment: .top, spacing: 16) {
+                                ForEach(Array(appState.items.enumerated()), id: \.element.id) { index, item in
+                                    ClipboardCard(
+                                        item: item,
+                                        index: index,
+                                        accentHex: appState.colorHex(for: item),
+                                        sourceColorHex: ClipboardSourceAppearance.colorHex(for: item),
+                                        pinboardName: appState.pinboardName(for: item),
+                                        pinboards: appState.pinboards,
+                                        copy: AppCopy(language: appState.appLanguage),
+                                        isSelected: appState.selectedItemIDs.contains(item.id),
+                                        onSelect: { appState.selectItem(id: item.id) },
+                                        onPaste: { onPaste(item, false) },
+                                        onPastePlain: { onPaste(item, true) },
+                                        onFavorite: { appState.toggleFavorite(itemID: item.id) },
+                                        onPin: { appState.togglePinned(itemID: item.id) },
+                                        onDelete: { pendingDeletion = .items([item.id]) },
+                                        onAssign: { appState.assign(itemID: item.id, to: $0) },
+                                        onRename: { appState.updateTitle(itemID: item.id, title: $0) },
+                                        onTitleEditingChanged: { isEditingItemTitle = $0 }
+                                    )
+                                    .id(item.id)
+                                    .background {
+                                        GeometryReader { geometry in
+                                            Color.clear.preference(
+                                                key: ClipboardCardFramePreferenceKey.self,
+                                                value: [item.id: geometry.frame(in: .named("card-selection"))]
+                                            )
+                                        }
+                                    }
+                                    .onDrag {
+                                        NSItemProvider(object: item.id.uuidString as NSString)
+                                    }
+                                    .quickPasteShortcut(index: index)
                                 }
-                                .quickPasteShortcut(index: index)
                             }
+                            .padding(.horizontal, 24)
+                            .padding(.top, 2)
+                            .padding(.bottom, 12)
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 2)
-                        .padding(.bottom, 12)
+
+                        if let selectionDrag {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(selectedCardOutline.opacity(0.16))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(selectedCardOutline.opacity(0.94), lineWidth: 1.5)
+                                }
+                                .frame(width: selectionDrag.rect.width, height: selectionDrag.rect.height)
+                                .offset(x: selectionDrag.rect.minX, y: selectionDrag.rect.minY)
+                                .allowsHitTesting(false)
+                        }
                     }
+                    .coordinateSpace(name: "card-selection")
+                    .onPreferenceChange(ClipboardCardFramePreferenceKey.self) { cardFrames = $0 }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 8, coordinateSpace: .named("card-selection"))
+                            .onChanged(updateSelectionDrag)
+                            .onEnded(finishSelectionDrag)
+                    )
                     .onAppear {
                         scrollSelection(into: proxy)
                     }
@@ -261,9 +293,9 @@ struct ClipboardPanelView: View {
     private var panelBackground: some View {
         LinearGradient(
             colors: [
-                Color(red: 0.12, green: 0.16, blue: 0.23),
-                Color(red: 0.10, green: 0.14, blue: 0.20),
-                Color(red: 0.18, green: 0.25, blue: 0.42)
+                Color(hex: "#09090A"),
+                Color(hex: "#050506"),
+                Color(hex: "#111113")
             ],
             startPoint: .leading,
             endPoint: .trailing
@@ -300,6 +332,21 @@ struct ClipboardPanelView: View {
         withAnimation(.easeInOut(duration: 0.14)) {
             proxy.scrollTo(selectedItemID, anchor: .center)
         }
+    }
+
+    private func updateSelectionDrag(_ value: DragGesture.Value) {
+        selectionDrag = CardSelectionDrag(start: value.startLocation, current: value.location)
+    }
+
+    private func finishSelectionDrag(_ value: DragGesture.Value) {
+        let drag = CardSelectionDrag(start: value.startLocation, current: value.location)
+        selectionDrag = nil
+
+        guard drag.rect.width >= 12 || drag.rect.height >= 12 else { return }
+        let selectedItemIDs = Set(cardFrames.compactMap { id, frame in
+            frame.intersects(drag.rect) ? id : nil
+        })
+        appState.selectItems(selectedItemIDs)
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
@@ -408,6 +455,28 @@ private enum PendingDeletion: Identifiable {
     }
 }
 
+private struct CardSelectionDrag {
+    let start: CGPoint
+    let current: CGPoint
+
+    var rect: CGRect {
+        CGRect(
+            x: min(start.x, current.x),
+            y: min(start.y, current.y),
+            width: abs(current.x - start.x),
+            height: abs(current.y - start.y)
+        )
+    }
+}
+
+private struct ClipboardCardFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: CGRect] = [:]
+
+    static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, latest in latest })
+    }
+}
+
 private struct PinboardTab: View {
     let title: String
     let colorHex: String
@@ -462,32 +531,31 @@ private struct ClipboardCard: View {
             previewArea
             footer
         }
-        .frame(width: 280, height: 286)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .frame(width: 242, height: 248)
+        .background(Color(hex: "#1C1C1E"))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(
-                    isSelected ? selectedCardOutline : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.16 : 0.9),
-                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 3)
+                    isSelected ? selectedCardOutline : Color(hex: accentHex).opacity(item.pinboardID == nil ? 0.12 : 0.72),
+                    lineWidth: isSelected ? 4 : (item.pinboardID == nil ? 1 : 2)
                 )
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(isSelected ? Color.black.opacity(0.30) : Color.clear, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(isSelected ? Color.black.opacity(0.42) : Color.clear, lineWidth: 1)
                 .padding(4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(selectedCardOutline.opacity(isSelected ? 1 : 0))
-                .frame(height: 4)
+                .frame(height: 3)
                 .padding(.horizontal, 4)
                 .padding(.bottom, 4),
             alignment: .bottom
         )
-        .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.22), radius: isSelected ? 8 : 8, y: 2)
-        .shadow(color: .black.opacity(isSelected ? 0.24 : 0.22), radius: isSelected ? 10 : 8, y: 3)
-        .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.34), radius: isSelected ? 10 : 7, y: 3)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .onTapGesture {
             onSelect()
         }
@@ -527,18 +595,24 @@ private struct ClipboardCard: View {
             sourceIcon
         }
         .foregroundStyle(.white)
-        .padding(.leading, 14)
+        .padding(.leading, 13)
         .padding(.trailing, 8)
-        .padding(.top, 10)
-        .frame(height: 62)
-        .background(Color(hex: sourceColorHex))
+        .padding(.top, 8)
+        .frame(height: 58)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: sourceColorHex), Color(hex: sourceColorHex).opacity(0.78)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
     }
 
     @ViewBuilder
     private var title: some View {
         if isEditingTitle {
             TextField(copy.clipboardKindTitle(item.kind), text: $titleDraft)
-                .font(.system(size: 21, weight: .medium))
+                .font(.system(size: 16, weight: .bold))
                 .textFieldStyle(.plain)
                 .focused($isTitleFocused)
                 .onSubmit(saveTitle)
@@ -549,7 +623,7 @@ private struct ClipboardCard: View {
                 }
         } else {
             Text(item.customTitle ?? defaultTitle)
-                .font(.system(size: 21, weight: .medium))
+                .font(.system(size: 16, weight: .bold))
                 .lineLimit(1)
                 .highPriorityGesture(TapGesture(count: 2).onEnded(startTitleEditing))
         }
@@ -574,7 +648,7 @@ private struct ClipboardCard: View {
                 .resizable()
                 .interpolation(.high)
                 .scaledToFit()
-                .frame(width: 42, height: 42)
+                .frame(width: 40, height: 40)
                 .shadow(color: .black.opacity(0.26), radius: 2, y: 1)
         } else {
             Image(systemName: item.kind.iconName)
@@ -585,39 +659,23 @@ private struct ClipboardCard: View {
 
     private var previewArea: some View {
         ZStack(alignment: .topLeading) {
-            linedPaper
-
+            Color(hex: "#1C1C1E")
             switch item.kind {
             case .image:
                 imagePreview
             case .file:
                 filePreview
-            case .text, .link:
+            case .link:
+                linkPreview
+            case .text:
                 Text(item.preview)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(.black)
-                    .lineLimit(5)
-                    .padding(12)
+                    .font(.system(size: 12.5, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(6)
+                    .padding(13)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var linedPaper: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<10, id: \.self) { _ in
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(height: 16)
-                    .overlay(alignment: .bottom) {
-                        Rectangle()
-                            .fill(Color.black.opacity(0.08))
-                            .frame(height: 1)
-                    }
-            }
-            Spacer(minLength: 0)
-        }
-        .background(Color.white)
     }
 
     @ViewBuilder
@@ -628,48 +686,36 @@ private struct ClipboardCard: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(4)
+                .padding(2)
         } else {
             Image(systemName: "photo")
                 .font(.system(size: 58))
-                .foregroundStyle(Color(hex: accentHex).opacity(0.72))
+                .foregroundStyle(.white.opacity(0.42))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
     private var filePreview: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 9) {
+        Group {
+            if filePaths.count == 1,
+               let image = NSImage(contentsOfFile: filePaths[0]) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(10)
+            } else {
                 Image(systemName: filePaths.count > 1 ? "doc.on.doc.fill" : "doc.fill")
-                    .font(.system(size: 30))
-                    .foregroundStyle(Color(hex: sourceColorHex).opacity(0.88))
-                Text(copy.files(filePaths.count))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.primary)
-            }
-
-            Divider()
-
-            ForEach(Array(filePaths.prefix(3).enumerated()), id: \.offset) { _, path in
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(URL(fileURLWithPath: path).lastPathComponent)
-                        .font(.system(size: 12, weight: .medium))
-                        .lineLimit(1)
-                    Text(path)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            if filePaths.count > 3 {
-                Text("+ \(filePaths.count - 3)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 78, weight: .light))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .shadow(color: .black.opacity(0.32), radius: 5, y: 3)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(12)
+    }
+
+    private var linkPreview: some View {
+        LinkCardPreview(urlString: item.urlString ?? item.text ?? item.preview)
     }
 
     private var footer: some View {
@@ -679,12 +725,14 @@ private struct ClipboardCard: View {
             Text(footerDetail)
                 .lineLimit(1)
             Spacer()
-            Text("⇧↩")
+            Label("\(index + 1)", systemImage: "line.3.horizontal")
+                .labelStyle(.titleAndIcon)
         }
         .font(.caption2)
-        .foregroundStyle(Color.black.opacity(0.34))
-        .padding(.horizontal, 14)
-        .frame(height: 28)
+        .foregroundStyle(.white.opacity(0.5))
+        .padding(.horizontal, 12)
+        .frame(height: 26)
+        .background(Color(hex: "#1C1C1E"))
     }
 
     private var footerDetail: String {
@@ -697,7 +745,7 @@ private struct ClipboardCard: View {
         case .image:
             return copy.itemKindDetail(.image)
         case .file:
-            return copy.files(filePaths.count)
+            return filePaths.count == 1 ? filePaths[0] : copy.multipleFiles
         }
     }
 
@@ -713,15 +761,98 @@ private struct ClipboardCard: View {
     }
 }
 
+private struct LinkCardPreview: View {
+    let urlString: String
+    @State private var title = ""
+    @State private var thumbnail: NSImage?
+
+    private var url: URL? {
+        URL(string: urlString)
+    }
+
+    private var host: String {
+        url?.host(percentEncoded: false) ?? urlString
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            if let thumbnail {
+                Image(nsImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+            } else {
+                LinearGradient(
+                    colors: [Color(hex: "#2A2A2D"), Color(hex: "#121214")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Image(systemName: "link")
+                    .font(.system(size: 34, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.52))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.82)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title.isEmpty ? host : title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(2)
+                Text(host)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white)
+            .padding(10)
+        }
+        .task(id: urlString) {
+            await loadMetadata()
+        }
+    }
+
+    private func loadMetadata() async {
+        guard let url else { return }
+
+        let provider = LPMetadataProvider()
+        provider.timeout = 8
+
+        do {
+            let metadata = try await provider.startFetchingMetadata(for: url)
+            await MainActor.run {
+                title = metadata.title ?? host
+            }
+            metadata.imageProvider?.loadObject(ofClass: NSImage.self) { object, _ in
+                guard let image = object as? NSImage else { return }
+                Task { @MainActor in
+                    thumbnail = image
+                }
+            }
+        } catch {
+            await MainActor.run {
+                title = host
+            }
+        }
+    }
+}
+
 private enum ClipboardSourceAppearance {
     static func colorHex(for item: ClipboardItem) -> String {
         let bundleID = item.sourceAppBundleID?.lowercased() ?? ""
 
         if bundleID == "com.apple.finder" { return "#5AA5EE" }
         if bundleID == "dev.vlv.pastevlv" { return "#F4B942" }
+        if bundleID == "com.microsoft.vscode" { return "#0E639C" }
+        if bundleID.contains("brave") { return "#F24D1C" }
         if bundleID.contains("openai") { return "#8A8A8A" }
 
-        let palette = ["#5AA5EE", "#A78BFA", "#22C55E", "#F59E0B", "#EC4899", "#64748B"]
+        let palette = ["#5AA5EE", "#1F7AC0", "#22C55E", "#F59E0B", "#D946EF", "#64748B"]
         let value = (item.sourceAppBundleID ?? item.sourceAppName ?? item.kind.rawValue)
             .unicodeScalars
             .reduce(0) { ($0 &* 31) &+ Int($1.value) }

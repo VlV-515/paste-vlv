@@ -30,8 +30,9 @@ privacy-sensitive clipboard data.
 - `NSPersistentCloudKitContainer` is used in local mode; CloudKit options are
   intentionally disabled.
 - Import/export of groups uses versioned JSON backups with grouped texts only.
-- Pinboard chips can be reordered by drag and drop. Cards show source-app
-  identity; file cards retain copied paths for count/name/path presentation.
+- Pinboard chips can be reordered by drag and drop. Paste-inspired cards use
+  dark surfaces, source-app identity, single/multi-file presentation, and rich
+  URL previews. Drag a selection rectangle across cards for batch actions.
 - Removing grouped content from history hides only its history appearance;
   permanent deletion happens from its group after confirmation.
 - `scripts/package-app.sh` creates a local unsigned `.app` bundle in `dist/`.

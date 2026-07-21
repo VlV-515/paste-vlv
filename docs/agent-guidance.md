@@ -47,3 +47,6 @@ Current history and pinboard behavior:
   `AppSettings.hiddenHistoryItemIDs` and remains in its pinboard. Delete it
   while viewing that pinboard for permanent removal.
 - Confirm every destructive card, group, or clear-history action in the UI.
+- Keep card styling dark and compact. `ClipboardSourceAppearance` owns app
+  color/icon mapping, `LinkCardPreview` owns URL metadata previews, and the
+  card-frame preference key powers mouse drag-rectangle selection.

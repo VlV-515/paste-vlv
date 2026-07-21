@@ -20,9 +20,10 @@
 4. Captured text, links, files, and images are normalized into
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
-6. `ClipboardPanelView` displays Paste-style horizontal history cards,
-   source-app icons/colors, file counts and paths, draggable/reorderable pinboard
-   chips, search, color-coded group state, first-item preselection on open,
+6. `ClipboardPanelView` displays dark Paste-style horizontal history cards,
+   source-app icons/colors, single/multi-file presentations, rich URL metadata
+   previews, draggable/reorderable pinboard chips, search, color-coded group
+   state, first-item preselection on open, mouse drag-rectangle multi-selection,
    left/right keyboard navigation, `Return` paste, `Cmd-A` selection, confirmed
    `Forward Delete` removal, editable card titles, and double-click paste. A
    global mouse monitor hides its floating panel after a click in another app.

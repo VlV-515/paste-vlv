@@ -123,6 +123,14 @@ final class AppState: ObservableObject {
         selectedItemIDs = [id]
     }
 
+    func selectItems(_ itemIDs: Set<UUID>) {
+        let visibleItemIDs = Set(items.map(\.id))
+        let selection = itemIDs.intersection(visibleItemIDs)
+        guard !selection.isEmpty else { return }
+        selectedItemIDs = selection
+        selectedItemID = items.first(where: { selection.contains($0.id) })?.id
+    }
+
     func selectAllItems() {
         let allItems = repository.fetchItems(
             search: searchText,

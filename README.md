@@ -147,7 +147,7 @@ Open the panel and start typing: search is focused automatically. Results match 
 | Delete selected card(s) | `Forward Delete` |
 | Close the panel | Click another app/window or use the panel menu |
 
-Each card shows the app that supplied the copy through its macOS app icon and a source color. File cards show the number of copied files plus their names and paths. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
+Cards use Paste-inspired dark surfaces, strong source-app headers, rounded corners, and macOS app icons. File cards keep a single-file thumbnail/path or a compact multi-file presentation; URL cards load a local rich preview when metadata is available. Drag across cards to select several items before deleting them. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
 
 ### Organize with pinboards
 

@@ -141,6 +141,8 @@ struct AppCopy {
         }
     }
 
+    var multipleFiles: String { choose("Various files", "Varios archivos") }
+
     func deleteItemsMessage(_ count: Int) -> String {
         choose(
             count == 1 ? "This item will be removed." : "These \(count) items will be removed.",
