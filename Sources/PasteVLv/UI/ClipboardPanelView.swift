@@ -244,6 +244,7 @@ struct ClipboardPanelView: View {
                                         accentHex: appState.colorHex(for: item),
                                         sourceColorHex: ClipboardSourceAppearance.colorHex(for: item),
                                         pinboardName: appState.pinboardName(for: item),
+                                        showsPinboardReference: appState.selectedPinboardID == nil,
                                         pinboards: appState.pinboards,
                                         copy: AppCopy(language: appState.appLanguage),
                                         isSelected: appState.selectedItemIDs.contains(item.id),
@@ -588,6 +589,7 @@ private struct ClipboardCard: View {
     let accentHex: String
     let sourceColorHex: String
     let pinboardName: String?
+    let showsPinboardReference: Bool
     let pinboards: [Pinboard]
     let copy: AppCopy
     let isSelected: Bool
@@ -808,8 +810,7 @@ private struct ClipboardCard: View {
         HStack {
             Text("#\(index + 1)")
             Spacer()
-            Text(footerDetail)
-                .lineLimit(1)
+            footerDetailView
             Spacer()
             Label("\(index + 1)", systemImage: "line.3.horizontal")
                 .labelStyle(.titleAndIcon)
@@ -821,10 +822,24 @@ private struct ClipboardCard: View {
         .background(Color(hex: "#1C1C1E"))
     }
 
-    private var footerDetail: String {
-        if let pinboardName {
-            return pinboardName
+    @ViewBuilder
+    private var footerDetailView: some View {
+        if showsPinboardReference, let pinboardName {
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(Color(hex: accentHex))
+                    .frame(width: 7, height: 7)
+                Text(copy.groupReference(pinboardName))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white.opacity(0.78))
+        } else {
+            Text(footerDetail)
+                .lineLimit(1)
         }
+    }
+
+    private var footerDetail: String {
         switch item.kind {
         case .text, .link:
             return copy.characters(item.preview.count)
