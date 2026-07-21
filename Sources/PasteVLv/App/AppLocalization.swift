@@ -44,9 +44,9 @@ struct AppCopy {
     var version: String { choose("Version", "Versión") }
     var createdBy: String { choose("Created by", "Creado por") }
     var license: String { choose("MIT License", "Licencia MIT") }
-    var developerGitHub: String { choose("Developer GitHub", "GitHub del desarrollador") }
-    var projectGitHub: String { choose("Project GitHub", "GitHub del proyecto") }
-    var copyright: String { choose("© 2026 VlV. All rights reserved.", "© 2026 VlV. Todos los derechos reservados.") }
+    var developerGitHub: String { choose("GitHub Profile", "Perfil GitHub") }
+    var projectGitHub: String { choose("Project on GitHub", "Proyecto GitHub") }
+    var copyright: String { choose("Copyright © 2026 VlV. Released under the MIT License.", "Copyright © 2026 VlV. Publicado bajo Licencia MIT.") }
     var languageLabel: String { choose("Language:", "Idioma:") }
     var launch: String { choose("Launch:", "Arranque:") }
     var integration: String { choose("Integration:", "Integración:") }

@@ -213,7 +213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showAbout() {
         if aboutWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 430, height: 470),
+                contentRect: NSRect(x: 0, y: 0, width: 620, height: 660),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false

@@ -32,67 +32,66 @@ struct AboutView: View {
     private var copy: AppCopy { AppCopy(language: language) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 10) {
-                AppIcon()
-                    .frame(width: 76, height: 76)
+        ZStack {
+            Color(red: 0.125, green: 0.137, blue: 0.22)
+
+            VStack(spacing: 0) {
+                Spacer(minLength: 56)
+
+                AboutApplicationIcon()
+                    .frame(width: 72, height: 72)
 
                 Text(AppBranding.displayName)
-                    .font(.system(size: 25, weight: .medium))
+                    .font(.system(size: 24, weight: .bold))
+                    .padding(.top, 28)
 
-                Text("\(copy.version) \(AppBranding.version) (\(AppBranding.build))")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
+                Text("\(copy.version) \(AppBranding.version)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.62))
+                    .padding(.top, 6)
 
-            Divider()
-                .padding(.vertical, 24)
-                .padding(.horizontal, 52)
+                Divider()
+                    .overlay(.white.opacity(0.16))
+                    .padding(.top, 30)
+                    .padding(.horizontal, 128)
 
-            VStack(spacing: 18) {
                 Text("\(copy.createdBy) VlV")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.68))
+                    .padding(.top, 28)
 
-                HStack(spacing: 30) {
+                HStack(spacing: 10) {
                     AboutLink(title: copy.developerGitHub, systemImage: "person.crop.circle", url: AppBranding.developerURL)
                     AboutLink(title: copy.projectGitHub, systemImage: "chevron.left.forwardslash.chevron.right", url: AppBranding.projectURL)
+                    AboutLink(title: copy.license, systemImage: "doc.text", url: AppBranding.licenseURL)
                 }
-            }
+                .padding(.top, 14)
 
-            Spacer(minLength: 24)
+                Spacer(minLength: 36)
 
-            VStack(spacing: 7) {
-                Text(copy.license)
-                    .font(.system(size: 12, weight: .medium))
+                Divider()
+                    .overlay(.white.opacity(0.16))
+                    .padding(.horizontal, 128)
+
                 Text(copy.copyright)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.56))
+                    .padding(.top, 15)
+                    .padding(.bottom, 25)
             }
         }
-        .multilineTextAlignment(.center)
-        .padding(.top, 34)
-        .padding(.bottom, 24)
+        .foregroundStyle(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-private struct AppIcon: View {
+private struct AboutApplicationIcon: View {
     var body: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [Color(red: 0.18, green: 0.58, blue: 0.98), Color(red: 0.27, green: 0.20, blue: 0.79)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .overlay {
-                Image(systemName: "doc.on.clipboard.fill")
-                    .font(.system(size: 34, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .shadow(color: .black.opacity(0.16), radius: 7, y: 3)
+        Image(nsImage: AppBranding.makeAboutIcon())
+            .resizable()
+            .scaledToFit()
+            .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .shadow(color: .black.opacity(0.35), radius: 9, y: 4)
     }
 }
 
@@ -103,22 +102,14 @@ private struct AboutLink: View {
 
     var body: some View {
         Link(destination: url) {
-            VStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 25, weight: .medium))
-                    .frame(width: 52, height: 52)
-                    .overlay {
-                        Circle()
-                            .stroke(Color.accentColor.opacity(0.55), lineWidth: 1)
-                    }
-                Text(title)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .frame(width: 104)
-            }
+            Label(title, systemImage: systemImage)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.86))
+                .lineLimit(1)
+                .padding(.horizontal, 12)
+                .frame(height: 26)
+                .background(.white.opacity(0.11), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .buttonStyle(.plain)
     }
 }
 

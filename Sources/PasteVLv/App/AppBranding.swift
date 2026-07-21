@@ -6,6 +6,22 @@ enum AppBranding {
     static let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
     static let developerURL = URL(string: "https://github.com/VlV-515")!
     static let projectURL = URL(string: "https://github.com/VlV-515/paste-vlv")!
+    static let licenseURL = URL(string: "https://github.com/VlV-515/paste-vlv/blob/main/LICENSE")!
+
+    static func makeAboutIcon() -> NSImage {
+        if let bundleIconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+           let image = NSImage(contentsOf: bundleIconURL) {
+            return image
+        }
+
+        let projectIconURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Assets/AppIcon.icns")
+        if let image = NSImage(contentsOf: projectIconURL) {
+            return image
+        }
+
+        return NSApp.applicationIconImage
+    }
 
     static func makeMenuBarIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)
