@@ -4,7 +4,7 @@ set -euo pipefail
 APP_NAME="Paste-vlv"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-VERSION="${1:-1.1.1}"
+VERSION="${1:-1.2.0}"
 BUILD="${BUILD_NUMBER:-1}"
 ARCHIVE_NAME="$APP_NAME-$VERSION-macos-unsigned.zip"
 CHECKSUM_NAME="$ARCHIVE_NAME.sha256"

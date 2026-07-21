@@ -2,7 +2,7 @@ import AppKit
 
 enum AppBranding {
     static let displayName = "Paste-vlv"
-    static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.1"
+    static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0"
     static let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
     static let developerURL = URL(string: "https://github.com/VlV-515")!
     static let projectURL = URL(string: "https://github.com/VlV-515/paste-vlv")!

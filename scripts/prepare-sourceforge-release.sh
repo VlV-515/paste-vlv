@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_NAME="Paste-vlv"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${1:-1.1.1}"
+VERSION="${1:-1.2.0}"
 TAG="v$VERSION"
 DIST_DIR="$ROOT_DIR/dist"
 SOURCEFORGE_DIR="$DIST_DIR/sourceforge/$TAG"
