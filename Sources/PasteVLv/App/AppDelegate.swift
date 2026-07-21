@@ -213,12 +213,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showAbout() {
         if aboutWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 800, height: 860),
-                styleMask: [.titled, .closable],
+                contentRect: NSRect(x: 0, y: 0, width: 1120, height: 860),
+                styleMask: [.titled, .closable, .resizable],
                 backing: .buffered,
                 defer: false
             )
             window.title = AppCopy(language: settings.appLanguage).about
+            window.minSize = NSSize(width: 980, height: 760)
             window.isReleasedWhenClosed = false
             window.center()
             window.contentViewController = NSHostingController(rootView: AboutView(language: settings.appLanguage, expanded: true))

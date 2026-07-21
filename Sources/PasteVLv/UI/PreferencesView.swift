@@ -38,7 +38,7 @@ struct AboutView: View {
     private var copy: AppCopy { AppCopy(language: language) }
     private var topSpacing: CGFloat { expanded ? 118 : 56 }
     private var iconSize: CGFloat { expanded ? 96 : 72 }
-    private var horizontalInset: CGFloat { expanded ? 170 : 128 }
+    private var horizontalInset: CGFloat { expanded ? 230 : 128 }
 
     var body: some View {
         ZStack {
@@ -116,6 +116,7 @@ private struct AboutLink: View {
                 .font(.system(size: expanded ? 14 : 12, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.86))
                 .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, expanded ? 17 : 12)
                 .frame(height: expanded ? 34 : 26)
                 .background(.white.opacity(0.11), in: RoundedRectangle(cornerRadius: expanded ? 8 : 6, style: .continuous))
