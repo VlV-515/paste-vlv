@@ -247,7 +247,15 @@ struct ClipboardPanelView: View {
                                         pinboards: appState.pinboards,
                                         copy: AppCopy(language: appState.appLanguage),
                                         isSelected: appState.selectedItemIDs.contains(item.id),
-                                        onSelect: { appState.selectItem(id: item.id) },
+                                        onSelect: {
+                                            if !appState.selectedItemIDs.contains(item.id) {
+                                                appState.selectItem(id: item.id)
+                                            }
+                                        },
+                                        dragPayload: {
+                                            let itemIDs = appState.selectedItemIDs.contains(item.id) ? appState.selectedItemIDs : [item.id]
+                                            return clipboardItemDragPayload(for: itemIDs)
+                                        },
                                         onPaste: { onPaste(item, false) },
                                         onPastePlain: { onPaste(item, true) },
                                         onFavorite: { appState.toggleFavorite(itemID: item.id) },
@@ -265,9 +273,6 @@ struct ClipboardPanelView: View {
                                                 value: [item.id: geometry.frame(in: .named("card-selection"))]
                                             )
                                         }
-                                    }
-                                    .onDrag {
-                                        itemDragProvider(for: item)
                                     }
                                 }
                             }
@@ -354,10 +359,20 @@ struct ClipboardPanelView: View {
     }
 
     private func updateSelectionDrag(_ value: DragGesture.Value) {
+        guard canStartSelectionDrag(at: value.startLocation) else {
+            selectionDrag = nil
+            return
+        }
+
         selectionDrag = CardSelectionDrag(start: value.startLocation, current: value.location)
     }
 
     private func finishSelectionDrag(_ value: DragGesture.Value) {
+        guard canStartSelectionDrag(at: value.startLocation) else {
+            selectionDrag = nil
+            return
+        }
+
         let drag = CardSelectionDrag(start: value.startLocation, current: value.location)
         selectionDrag = nil
 
@@ -366,6 +381,12 @@ struct ClipboardPanelView: View {
             frame.intersects(drag.rect) ? id : nil
         })
         appState.selectItems(selectedItemIDs)
+    }
+
+    private func canStartSelectionDrag(at location: CGPoint) -> Bool {
+        !cardFrames.contains { _, frame in
+            frame.contains(location)
+        }
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
@@ -423,12 +444,6 @@ struct ClipboardPanelView: View {
 
         let destinationIndex = sourceIndex < targetIndex ? targetIndex + 1 : targetIndex
         appState.reorder(pinboardID: sourceID, to: destinationIndex)
-    }
-
-    private func itemDragProvider(for item: ClipboardItem) -> NSItemProvider {
-        let itemIDs = appState.selectedItemIDs.contains(item.id) ? appState.selectedItemIDs : [item.id]
-        appState.selectItems(itemIDs)
-        return NSItemProvider(object: clipboardItemDragPayload(for: itemIDs) as NSString)
     }
 
     private func handleItemDrop(_ providers: [NSItemProvider], on pinboardID: UUID) -> Bool {
@@ -577,6 +592,7 @@ private struct ClipboardCard: View {
     let copy: AppCopy
     let isSelected: Bool
     let onSelect: () -> Void
+    let dragPayload: () -> String
     let onPaste: () -> Void
     let onPastePlain: () -> Void
     let onFavorite: () -> Void
@@ -587,7 +603,6 @@ private struct ClipboardCard: View {
     let onTitleEditingChanged: (Bool) -> Void
     @State private var isEditingTitle = false
     @State private var titleDraft = ""
-    @State private var didSelectOnPress = false
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -621,7 +636,7 @@ private struct ClipboardCard: View {
         )
         .shadow(color: isSelected ? selectedCardOutline.opacity(0.18) : .black.opacity(0.34), radius: isSelected ? 10 : 7, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .simultaneousGesture(instantSelectionGesture)
+        .background(CardPointerMonitor(onMouseDown: onSelect, dragPayload: dragPayload))
         .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
             Button(copy.paste) { onPaste() }
@@ -644,18 +659,6 @@ private struct ClipboardCard: View {
                 Text(copy.delete)
             }
         }
-    }
-
-    private var instantSelectionGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { _ in
-                guard !didSelectOnPress else { return }
-                didSelectOnPress = true
-                onSelect()
-            }
-            .onEnded { _ in
-                didSelectOnPress = false
-            }
     }
 
     private var header: some View {
@@ -1103,6 +1106,148 @@ private extension NSColor {
         let green = CGFloat((value >> 8) & 0xFF) / 255
         let blue = CGFloat(value & 0xFF) / 255
         self.init(red: red, green: green, blue: blue, alpha: 1)
+    }
+}
+
+private struct CardPointerMonitor: NSViewRepresentable {
+    let onMouseDown: () -> Void
+    let dragPayload: () -> String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onMouseDown: onMouseDown, dragPayload: dragPayload)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        context.coordinator.hostView = view
+        context.coordinator.installMonitorIfNeeded()
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.onMouseDown = onMouseDown
+        context.coordinator.dragPayload = dragPayload
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.removeMonitor()
+    }
+
+    final class Coordinator: NSObject, NSDraggingSource {
+        weak var hostView: NSView?
+        var onMouseDown: () -> Void
+        var dragPayload: () -> String
+        private var monitor: Any?
+        private var mouseDownEvent: NSEvent?
+        private var mouseDownLocation: CGPoint?
+        private var hasStartedDrag = false
+
+        init(onMouseDown: @escaping () -> Void, dragPayload: @escaping () -> String) {
+            self.onMouseDown = onMouseDown
+            self.dragPayload = dragPayload
+        }
+
+        func installMonitorIfNeeded() {
+            guard monitor == nil else { return }
+
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]) { [weak self] event in
+                guard let self,
+                      let hostView,
+                      event.window === hostView.window else {
+                    return event
+                }
+
+                let location = hostView.convert(event.locationInWindow, from: nil)
+
+                switch event.type {
+                case .leftMouseDown where hostView.bounds.contains(location):
+                    mouseDownEvent = event
+                    mouseDownLocation = location
+                    hasStartedDrag = false
+                    onMouseDown()
+                case .leftMouseDragged:
+                    guard let mouseDownEvent,
+                          let mouseDownLocation,
+                          !hasStartedDrag,
+                          dragDistance(from: mouseDownLocation, to: location) >= 5 else {
+                        return event
+                    }
+
+                    hasStartedDrag = true
+                    beginDrag(from: mouseDownEvent, in: hostView)
+                    return nil
+                case .leftMouseUp:
+                    mouseDownEvent = nil
+                    mouseDownLocation = nil
+                    hasStartedDrag = false
+                default:
+                    break
+                }
+
+                return event
+            }
+        }
+
+        func removeMonitor() {
+            if let monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+        }
+
+        func draggingSession(
+            _ session: NSDraggingSession,
+            sourceOperationMaskFor context: NSDraggingContext
+        ) -> NSDragOperation {
+            .copy
+        }
+
+        private func beginDrag(from event: NSEvent, in hostView: NSView) {
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setString(dragPayload(), forType: .string)
+
+            let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
+            let image = dragImage()
+            let frame = NSRect(
+                x: max((hostView.bounds.width - image.size.width) / 2, 0),
+                y: max((hostView.bounds.height - image.size.height) / 2, 0),
+                width: image.size.width,
+                height: image.size.height
+            )
+            draggingItem.setDraggingFrame(frame, contents: image)
+            hostView.beginDraggingSession(with: [draggingItem], event: event, source: self)
+        }
+
+        private func dragDistance(from start: CGPoint, to current: CGPoint) -> CGFloat {
+            hypot(current.x - start.x, current.y - start.y)
+        }
+
+        private func dragImage() -> NSImage {
+            let size = NSSize(width: 172, height: 46)
+            let image = NSImage(size: size)
+            image.lockFocus()
+
+            let rect = NSRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1)
+            let path = NSBezierPath(roundedRect: rect, xRadius: 11, yRadius: 11)
+            NSColor(calibratedWhite: 0.12, alpha: 0.94).setFill()
+            path.fill()
+            NSColor(calibratedWhite: 1, alpha: 0.24).setStroke()
+            path.lineWidth = 1
+            path.stroke()
+
+            let title = NSString(string: "PasteVLv")
+            title.draw(
+                in: NSRect(x: 16, y: 14, width: size.width - 32, height: 18),
+                withAttributes: [
+                    .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+                    .foregroundColor: NSColor.white.withAlphaComponent(0.86)
+                ]
+            )
+
+            image.unlockFocus()
+            image.isTemplate = false
+            return image
+        }
     }
 }
 
