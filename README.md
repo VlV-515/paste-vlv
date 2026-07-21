@@ -14,6 +14,8 @@
   ·
   <a href="https://github.com/VlV-515/paste-vlv/releases">Releases</a>
   ·
+  <a href="https://sourceforge.net/projects/paste-vlv/">SourceForge</a>
+  ·
   <a href="#get-paste-vlv">Get it</a>
   ·
   <a href="#using-paste-vlv">How it works</a>
