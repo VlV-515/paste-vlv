@@ -23,6 +23,7 @@ struct ClipboardPanelView: View {
     @FocusState private var isSearchFocused: Bool
     @State private var isAddingPinboard = false
     @State private var editingPinboard: Pinboard?
+    @State private var isEditingItemTitle = false
     @State private var newPinboardName = ""
     @State private var newPinboardColor = pinboardPalette[0]
 
@@ -192,14 +193,16 @@ struct ClipboardPanelView: View {
                                     pinboardName: appState.pinboardName(for: item),
                                     pinboards: appState.pinboards,
                                     copy: AppCopy(language: appState.appLanguage),
-                                    isSelected: appState.selectedItemID == item.id,
+                                    isSelected: appState.selectedItemIDs.contains(item.id),
                                     onSelect: { appState.selectItem(id: item.id) },
                                     onPaste: { onPaste(item, false) },
                                     onPastePlain: { onPaste(item, true) },
                                     onFavorite: { appState.toggleFavorite(itemID: item.id) },
                                     onPin: { appState.togglePinned(itemID: item.id) },
                                     onDelete: { appState.delete(itemID: item.id) },
-                                    onAssign: { appState.assign(itemID: item.id, to: $0) }
+                                    onAssign: { appState.assign(itemID: item.id, to: $0) },
+                                    onRename: { appState.updateTitle(itemID: item.id, title: $0) },
+                                    onTitleEditingChanged: { isEditingItemTitle = $0 }
                                 )
                                 .id(item.id)
                                 .onDrag {
@@ -284,10 +287,13 @@ struct ClipboardPanelView: View {
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
-        guard editingPinboard == nil, !isAddingPinboard else { return false }
+        guard editingPinboard == nil, !isAddingPinboard, !isEditingItemTitle else { return false }
         let modifiers = event.modifierFlags.intersection([.shift, .control, .option, .command])
 
         switch event.keyCode {
+        case 0 where modifiers == [.command]:
+            appState.selectAllItems()
+            return true
         case 123 where modifiers.isEmpty:
             appState.moveSelection(offset: -1)
             return true
@@ -302,8 +308,8 @@ struct ClipboardPanelView: View {
             onPaste(selectedItem, modifiers == [.shift])
             return true
         case 117 where modifiers.isEmpty:
-            guard let selectedItem = appState.selectedItem else { return false }
-            appState.delete(itemID: selectedItem.id)
+            guard appState.selectedItem != nil else { return false }
+            appState.deleteSelectedItems()
             return true
         default:
             return false
@@ -352,6 +358,11 @@ private struct ClipboardCard: View {
     let onPin: () -> Void
     let onDelete: () -> Void
     let onAssign: (UUID?) -> Void
+    let onRename: (String?) -> Void
+    let onTitleEditingChanged: (Bool) -> Void
+    @State private var isEditingTitle = false
+    @State private var titleDraft = ""
+    @FocusState private var isTitleFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -402,6 +413,7 @@ private struct ClipboardCard: View {
                     Button(pinboard.name) { onAssign(pinboard.id) }
                 }
             }
+            Button(copy.rename) { startTitleEditing() }
             Divider()
             Button(role: .destructive) {
                 onDelete()
@@ -414,9 +426,7 @@ private struct ClipboardCard: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(copy.clipboardKindTitle(item.kind))
-                    .font(.system(size: 21, weight: .medium))
-                    .lineLimit(1)
+                title
                 Text(item.createdAt, style: .relative)
                     .font(.system(size: 12, weight: .medium))
                     .opacity(0.85)
@@ -430,6 +440,39 @@ private struct ClipboardCard: View {
         .padding(.top, 10)
         .frame(height: 62)
         .background(Color(hex: accentHex))
+    }
+
+    @ViewBuilder
+    private var title: some View {
+        if isEditingTitle {
+            TextField(copy.clipboardKindTitle(item.kind), text: $titleDraft)
+                .font(.system(size: 21, weight: .medium))
+                .textFieldStyle(.plain)
+                .focused($isTitleFocused)
+                .onSubmit(saveTitle)
+                .onAppear {
+                    DispatchQueue.main.async {
+                        isTitleFocused = true
+                    }
+                }
+        } else {
+            Text(item.customTitle ?? copy.clipboardKindTitle(item.kind))
+                .font(.system(size: 21, weight: .medium))
+                .lineLimit(1)
+                .highPriorityGesture(TapGesture(count: 2).onEnded(startTitleEditing))
+        }
+    }
+
+    private func startTitleEditing() {
+        titleDraft = item.customTitle ?? ""
+        isEditingTitle = true
+        onTitleEditingChanged(true)
+    }
+
+    private func saveTitle() {
+        onRename(titleDraft)
+        isEditingTitle = false
+        onTitleEditingChanged(false)
     }
 
     @ViewBuilder

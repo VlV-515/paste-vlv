@@ -12,6 +12,7 @@ final class AppState: ObservableObject {
         didSet { refreshItems(resetSelection: true) }
     }
     @Published var selectedItemID: UUID?
+    @Published private(set) var selectedItemIDs: Set<UUID> = []
     @Published var newPinboardName = ""
     @Published var lastSourceAppName: String?
     @Published private(set) var panelPresentationID = UUID()
@@ -90,6 +91,7 @@ final class AppState: ObservableObject {
 
         if resetSelection {
             selectedItemID = items.first?.id
+            selectedItemIDs = items.first.map { [$0.id] } ?? []
             return
         }
 
@@ -98,6 +100,11 @@ final class AppState: ObservableObject {
             selectedItemID = previousSelection
         } else {
             selectedItemID = items.first?.id
+        }
+
+        selectedItemIDs.formIntersection(Set(items.map(\.id)))
+        if selectedItemIDs.isEmpty, let selectedItemID {
+            selectedItemIDs = [selectedItemID]
         }
     }
 
@@ -109,6 +116,17 @@ final class AppState: ObservableObject {
     func selectItem(id: UUID) {
         guard items.contains(where: { $0.id == id }) else { return }
         selectedItemID = id
+        selectedItemIDs = [id]
+    }
+
+    func selectAllItems() {
+        let allItems = repository.fetchItems(
+            search: searchText,
+            pinboardID: selectedPinboardID,
+            limit: .max
+        )
+        selectedItemIDs = Set(allItems.map(\.id))
+        selectedItemID = items.first?.id
     }
 
     func moveSelection(offset: Int) {
@@ -120,6 +138,7 @@ final class AppState: ObservableObject {
         let currentIndex = items.firstIndex(where: { $0.id == selectedItemID }) ?? 0
         let nextIndex = min(max(currentIndex + offset, 0), items.count - 1)
         selectedItemID = items[nextIndex].id
+        selectedItemIDs = [items[nextIndex].id]
     }
 
     func prepareForPanelPresentation() {
@@ -171,6 +190,25 @@ final class AppState: ObservableObject {
 
     func delete(itemID: UUID) {
         repository.delete(itemID: itemID)
+        selectedItemIDs.remove(itemID)
+        refreshItems()
+    }
+
+    func deleteSelectedItems() {
+        let itemIDs: Set<UUID>
+        if selectedItemIDs.isEmpty {
+            itemIDs = selectedItem.map { [$0.id] } ?? []
+        } else {
+            itemIDs = selectedItemIDs
+        }
+        repository.delete(itemIDs: itemIDs)
+        selectedItemID = nil
+        selectedItemIDs = []
+        refreshItems(resetSelection: true)
+    }
+
+    func updateTitle(itemID: UUID, title: String?) {
+        repository.updateTitle(itemID: itemID, title: title)
         refreshItems()
     }
 

@@ -13,6 +13,7 @@ enum ClipboardKind: String, CaseIterable, Identifiable, Codable {
 struct ClipboardItem: Identifiable, Equatable {
     let id: UUID
     let kind: ClipboardKind
+    let customTitle: String?
     let preview: String
     let searchableText: String
     let text: String?

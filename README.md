@@ -54,7 +54,7 @@ No account. No subscription. No server to sign into. Your clipboard history stay
 | --- | --- |
 | Captures text, links, images, and files from the macOS clipboard | Send clipboard data to a server or enable cloud sync today |
 | Stores history locally in a Core Data store | Include a team workspace, shared pinboards, or collaboration features |
-| Gives you pinboards, favorites, pins, search, and quick paste | Replace a password manager or promise secure handling of secrets you copy |
+| Gives you pinboards, custom titles, favorites, pins, search, and quick paste | Replace a password manager or promise secure handling of secrets you copy |
 | Exports grouped text pinboards to JSON | Export ungrouped history, links, images, or files to JSON |
 | Runs as a native macOS menu-bar utility | Support iPhone, iPad, Windows, Linux, or web browsers |
 
@@ -143,10 +143,11 @@ Open the panel and start typing: search is focused automatically. Results match 
 | Paste selected text as plain text | `Shift-Return` |
 | Quick-paste one of the first nine cards | `Command-1` through `Command-9` |
 | Paste a card with the mouse | Double-click it |
-| Delete selected card | `Forward Delete` |
+| Select all cards in current group/history | `⌘A` |
+| Delete selected card(s) | `Forward Delete` |
 | Close the panel | Click another app/window or use the panel menu |
 
-Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, and deletion.
+Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
 
 ### Organize with pinboards
 
@@ -191,10 +192,10 @@ Use **Export groups…** from any of these places:
 - Panel `…` menu
 - Preferences > General > JSON Backup
 
-The saved filename looks like `paste-vlv-groups-YYYY-MM-DD-HH-mm-ss.json`. It is a pretty-printed, versioned JSON archive (current schema: `2`) containing:
+The saved filename looks like `paste-vlv-groups-YYYY-MM-DD-HH-mm-ss.json`. It is a pretty-printed, versioned JSON archive (current schema: `3`) containing:
 
 - Pinboards: stable IDs, names, colors, order, and creation dates
-- **Grouped text items only**: text, preview and search fields, source-app metadata, favorites, pins, group assignment, dates, and content hashes
+- **Grouped text items only**: optional custom title, text, preview and search fields, source-app metadata, favorites, pins, group assignment, dates, and content hashes
 - Export metadata: app name, bundle identifier, platform, and timestamp
 
 ### What backup intentionally leaves out
@@ -206,7 +207,7 @@ This keeps the JSON portable and reasonably small. The app shows an export summa
 
 ### Import
 
-Choose **Import groups…** from the same menus and select a Paste-vlv JSON archive. Import validates the schema, IDs, group assignments, referenced pinboards, and item types before changing local data. Matching IDs are updated; missing ones are created. The completion message reports both counts.
+Choose **Import groups…** from the same menus and select a Paste-vlv JSON archive. Import accepts schemas `2` and `3`, validates IDs, group assignments, referenced pinboards, and item types before changing local data. Matching IDs are updated; missing ones are created. The completion message reports both counts.
 
 ## Data, privacy, and sync
 

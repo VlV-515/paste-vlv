@@ -5,6 +5,7 @@ import Foundation
 final class ClipboardItemEntity: NSManagedObject {
     @NSManaged var id: UUID
     @NSManaged var kind: String
+    @NSManaged var customTitle: String?
     @NSManaged var preview: String
     @NSManaged var searchableText: String
     @NSManaged var text: String?
@@ -34,6 +35,7 @@ extension ClipboardItemEntity {
         ClipboardItem(
             id: id,
             kind: ClipboardKind(rawValue: kind) ?? .text,
+            customTitle: customTitle,
             preview: preview,
             searchableText: searchableText,
             text: text,

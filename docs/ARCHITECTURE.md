@@ -22,8 +22,8 @@
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays Paste-style horizontal history cards,
    pinboards, search, color-coded group state, first-item preselection on open,
-   left/right keyboard navigation, `Return` paste, `Forward Delete` removal,
-   and double-click paste. A global mouse monitor hides its floating panel after
+   left/right keyboard navigation, `Return` paste, `Cmd-A` selection, `Forward Delete`
+   removal, editable card titles, and double-click paste. A global mouse monitor hides its floating panel after
    a click in another app.
 7. `AppState` opens native import/export panels for group backups and delegates
    JSON archive reads/writes to `ClipboardRepository`.
@@ -54,9 +54,9 @@
 - `PinboardEntity`
   - name, color, sort order, creation date
 - Images are stored as files in Application Support and referenced by path.
-- JSON import/export uses schema version `2` and contains:
+- JSON import/export uses schema version `3` and contains:
   - pinboards with stable UUIDs
-  - only grouped clipboard items of kind `text`
+  - only grouped clipboard items of kind `text`, including optional custom titles
   - export metadata and timestamp
 
 ## CloudKit Path

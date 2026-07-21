@@ -1,7 +1,7 @@
 import Foundation
 
 struct ClipboardHistoryArchive: Codable {
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
     let schemaVersion: Int
     let exportedAt: Date
@@ -10,7 +10,7 @@ struct ClipboardHistoryArchive: Codable {
     let items: [ClipboardHistoryItem]
 
     func validated() throws -> ClipboardHistoryArchive {
-        guard schemaVersion == Self.currentSchemaVersion else {
+        guard (2...Self.currentSchemaVersion).contains(schemaVersion) else {
             throw ClipboardTransferError.unsupportedSchemaVersion(schemaVersion)
         }
 
@@ -62,6 +62,7 @@ struct ClipboardHistoryPinboard: Codable {
 struct ClipboardHistoryItem: Codable {
     let id: UUID
     let kind: ClipboardKind
+    let customTitle: String?
     let preview: String
     let searchableText: String
     let text: String?

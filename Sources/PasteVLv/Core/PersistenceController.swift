@@ -16,6 +16,8 @@ final class PersistenceController {
 
         let description = NSPersistentStoreDescription(url: Self.storeURL)
         description.type = NSSQLiteStoreType
+        description.shouldMigrateStoreAutomatically = true
+        description.shouldInferMappingModelAutomatically = true
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
         description.cloudKitContainerOptions = nil
@@ -75,6 +77,7 @@ final class PersistenceController {
         entity.properties = [
             attribute("id", .UUIDAttributeType),
             attribute("kind", .stringAttributeType),
+            attribute("customTitle", .stringAttributeType, optional: true),
             attribute("preview", .stringAttributeType),
             attribute("searchableText", .stringAttributeType),
             attribute("text", .stringAttributeType, optional: true),

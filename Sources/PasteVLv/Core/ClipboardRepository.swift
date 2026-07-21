@@ -69,7 +69,8 @@ final class ClipboardRepository {
         if !trimmed.isEmpty {
             predicates.append(
                 NSPredicate(
-                    format: "searchableText CONTAINS[cd] %@ OR preview CONTAINS[cd] %@ OR sourceAppName CONTAINS[cd] %@",
+                    format: "customTitle CONTAINS[cd] %@ OR searchableText CONTAINS[cd] %@ OR preview CONTAINS[cd] %@ OR sourceAppName CONTAINS[cd] %@",
+                    trimmed,
                     trimmed,
                     trimmed,
                     trimmed
@@ -104,6 +105,7 @@ final class ClipboardRepository {
         let item = ClipboardItemEntity(context: context)
         item.id = UUID()
         item.kind = content.kind.rawValue
+        item.customTitle = nil
         item.preview = content.preview
         item.searchableText = content.searchableText
         item.text = content.text
@@ -142,6 +144,27 @@ final class ClipboardRepository {
     func delete(itemID: UUID) {
         guard let item = findItem(id: itemID) else { return }
         context.delete(item)
+        save()
+    }
+
+    func delete(itemIDs: Set<UUID>) {
+        guard !itemIDs.isEmpty else { return }
+
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.predicate = NSPredicate(format: "id IN %@", Array(itemIDs))
+
+        do {
+            try context.fetch(request).forEach(context.delete)
+            save()
+        } catch {
+            NSLog("Unable to delete selected clipboard items: \(error.localizedDescription)")
+        }
+    }
+
+    func updateTitle(itemID: UUID, title: String?) {
+        guard let item = findItem(id: itemID) else { return }
+        let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        item.customTitle = trimmed?.isEmpty == false ? trimmed : nil
         save()
     }
 
@@ -268,6 +291,7 @@ final class ClipboardRepository {
 
             entity.id = snapshot.id
             entity.kind = snapshot.kind.rawValue
+            entity.customTitle = snapshot.customTitle
             entity.preview = snapshot.preview
             entity.searchableText = snapshot.searchableText
             entity.text = snapshot.text
@@ -341,6 +365,7 @@ final class ClipboardRepository {
             return ClipboardHistoryItem(
                     id: entity.id,
                     kind: ClipboardKind(rawValue: entity.kind) ?? .text,
+                    customTitle: entity.customTitle,
                     preview: entity.preview,
                     searchableText: entity.searchableText,
                     text: entity.text,
