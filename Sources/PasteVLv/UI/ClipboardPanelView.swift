@@ -636,7 +636,7 @@ private struct ClipboardCard: View {
                 .padding(.bottom, 4),
             alignment: .bottom
         )
-        .shadow(color: cardShadowColor, radius: isSelected || isShowingPinboardReference ? 10 : 7, y: 3)
+        .shadow(color: cardShadowColor, radius: isSelected || usesPinboardAppearance ? 10 : 7, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .background(CardPointerMonitor(onMouseDown: onSelect, dragPayload: dragPayload))
         .onTapGesture(count: 2, perform: onPaste)
@@ -672,7 +672,7 @@ private struct ClipboardCard: View {
                     .opacity(0.85)
             }
             Spacer()
-            if !isShowingPinboardReference {
+            if !usesPinboardAppearance {
                 sourceIcon
             }
         }
@@ -826,7 +826,7 @@ private struct ClipboardCard: View {
 
     @ViewBuilder
     private var footerDetailView: some View {
-        if isShowingPinboardReference, let pinboardName {
+        if showsPinboardChip, let pinboardName {
             HStack(spacing: 6) {
                 Circle()
                     .fill(Color(hex: accentHex))
@@ -861,33 +861,37 @@ private struct ClipboardCard: View {
         item.kind == .file ? copy.files(filePaths.count) : copy.clipboardKindTitle(item.kind)
     }
 
-    private var isShowingPinboardReference: Bool {
+    private var usesPinboardAppearance: Bool {
+        pinboardName != nil
+    }
+
+    private var showsPinboardChip: Bool {
         showsPinboardReference && pinboardName != nil
     }
 
     private var headerColorHex: String {
-        isShowingPinboardReference ? accentHex : sourceColorHex
+        usesPinboardAppearance ? accentHex : sourceColorHex
     }
 
     private var cardOutlineColor: Color {
         if isSelected {
             return selectedCardOutline
         }
-        return Color(hex: accentHex).opacity(isShowingPinboardReference ? 0.96 : (item.pinboardID == nil ? 0.12 : 0.72))
+        return Color(hex: accentHex).opacity(usesPinboardAppearance ? 0.96 : (item.pinboardID == nil ? 0.12 : 0.72))
     }
 
     private var cardOutlineWidth: CGFloat {
         if isSelected {
             return 4
         }
-        return isShowingPinboardReference ? 3 : (item.pinboardID == nil ? 1 : 2)
+        return usesPinboardAppearance ? 3 : (item.pinboardID == nil ? 1 : 2)
     }
 
     private var cardShadowColor: Color {
         if isSelected {
             return selectedCardOutline.opacity(0.18)
         }
-        return isShowingPinboardReference ? Color(hex: accentHex).opacity(0.24) : .black.opacity(0.34)
+        return usesPinboardAppearance ? Color(hex: accentHex).opacity(0.24) : .black.opacity(0.34)
     }
 
     private var filePaths: [String] {
