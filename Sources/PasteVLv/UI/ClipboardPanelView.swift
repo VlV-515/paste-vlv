@@ -1,6 +1,7 @@
 import AppKit
 import LinkPresentation
 import SwiftUI
+import UniformTypeIdentifiers
 
 private let pinboardPalette = [
     "#F85B5B",
@@ -13,6 +14,7 @@ private let pinboardPalette = [
 ]
 
 private let selectedCardOutline = Color(red: 0.84, green: 0.62, blue: 0.26)
+private let clipboardItemDragPrefix = "paste-vlv.clipboard-items:"
 
 struct ClipboardPanelView: View {
     @ObservedObject var appState: AppState
@@ -32,6 +34,7 @@ struct ClipboardPanelView: View {
     @State private var pinboardFrames: [UUID: CGRect] = [:]
     @State private var draggedPinboardID: UUID?
     @State private var pinboardDropTargetID: UUID?
+    @State private var pinboardItemDropTargetID: UUID?
 
     private var copy: AppCopy {
         AppCopy(language: appState.appLanguage)
@@ -154,7 +157,7 @@ struct ClipboardPanelView: View {
                             .opacity(draggedPinboardID == pinboard.id ? 0.56 : 1)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(Color.white.opacity(pinboardDropTargetID == pinboard.id ? 0.7 : 0), lineWidth: 1)
+                                    .stroke(Color.white.opacity(pinboardDropTargetID == pinboard.id || pinboardItemDropTargetID == pinboard.id ? 0.7 : 0), lineWidth: 1)
                             }
                             .highPriorityGesture(
                                 DragGesture(minimumDistance: 5, coordinateSpace: .named("pinboard-tabs"))
@@ -191,6 +194,17 @@ struct ClipboardPanelView: View {
                                         }
                                     }
                                 }
+                            }
+                            .onDrop(
+                                of: [UTType.plainText],
+                                isTargeted: Binding(
+                                    get: { pinboardItemDropTargetID == pinboard.id },
+                                    set: { isTargeted in
+                                        pinboardItemDropTargetID = isTargeted ? pinboard.id : nil
+                                    }
+                                )
+                            ) { providers in
+                                handleItemDrop(providers, on: pinboard.id)
                             }
                         }
                     }
@@ -253,7 +267,7 @@ struct ClipboardPanelView: View {
                                         }
                                     }
                                     .onDrag {
-                                        NSItemProvider(object: item.id.uuidString as NSString)
+                                        itemDragProvider(for: item)
                                     }
                                 }
                             }
@@ -411,6 +425,32 @@ struct ClipboardPanelView: View {
         appState.reorder(pinboardID: sourceID, to: destinationIndex)
     }
 
+    private func itemDragProvider(for item: ClipboardItem) -> NSItemProvider {
+        let itemIDs = appState.selectedItemIDs.contains(item.id) ? appState.selectedItemIDs : [item.id]
+        appState.selectItems(itemIDs)
+        return NSItemProvider(object: clipboardItemDragPayload(for: itemIDs) as NSString)
+    }
+
+    private func handleItemDrop(_ providers: [NSItemProvider], on pinboardID: UUID) -> Bool {
+        guard let provider = providers.first(where: { $0.canLoadObject(ofClass: NSString.self) }) else {
+            return false
+        }
+
+        provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let text = object as? String,
+                  let itemIDs = clipboardItemIDs(from: text),
+                  !itemIDs.isEmpty else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                pinboardItemDropTargetID = nil
+                appState.assign(itemIDs: itemIDs, to: pinboardID)
+            }
+        }
+        return true
+    }
+
     private func performDeletion(_ request: PendingDeletion) {
         switch request {
         case .items(let itemIDs):
@@ -465,6 +505,21 @@ private struct CardSelectionDrag {
             height: abs(current.y - start.y)
         )
     }
+}
+
+private func clipboardItemDragPayload(for itemIDs: Set<UUID>) -> String {
+    clipboardItemDragPrefix + itemIDs.map(\.uuidString).sorted().joined(separator: ",")
+}
+
+private func clipboardItemIDs(from payload: String) -> Set<UUID>? {
+    guard payload.hasPrefix(clipboardItemDragPrefix) else { return nil }
+
+    let rawIDs = payload.dropFirst(clipboardItemDragPrefix.count)
+    let itemIDs = rawIDs
+        .split(separator: ",")
+        .compactMap { UUID(uuidString: String($0)) }
+
+    return Set(itemIDs)
 }
 
 private struct ClipboardCardFramePreferenceKey: PreferenceKey {

@@ -141,9 +141,21 @@ final class ClipboardRepository {
     }
 
     func assign(itemID: UUID, to pinboardID: UUID?) {
-        guard let item = findItem(id: itemID) else { return }
-        item.pinboardID = pinboardID
-        save()
+        assign(itemIDs: [itemID], to: pinboardID)
+    }
+
+    func assign(itemIDs: Set<UUID>, to pinboardID: UUID?) {
+        guard !itemIDs.isEmpty else { return }
+
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.predicate = NSPredicate(format: "id IN %@", Array(itemIDs))
+
+        do {
+            try context.fetch(request).forEach { $0.pinboardID = pinboardID }
+            save()
+        } catch {
+            NSLog("Unable to assign selected clipboard items: \(error.localizedDescription)")
+        }
     }
 
     func toggleFavorite(itemID: UUID) {

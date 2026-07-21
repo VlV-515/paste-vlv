@@ -202,9 +202,15 @@ final class AppState: ObservableObject {
     }
 
     func assign(itemID: UUID, to pinboardID: UUID?) {
-        repository.assign(itemID: itemID, to: pinboardID)
+        assign(itemIDs: [itemID], to: pinboardID)
+    }
+
+    func assign(itemIDs: Set<UUID>, to pinboardID: UUID?) {
+        guard !itemIDs.isEmpty else { return }
+
+        repository.assign(itemIDs: itemIDs, to: pinboardID)
         if pinboardID == nil {
-            settings.restoreToHistory([itemID])
+            settings.restoreToHistory(itemIDs)
         }
         refreshItems()
     }
