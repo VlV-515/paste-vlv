@@ -121,8 +121,6 @@ final class AppState: ObservableObject {
         guard items.contains(where: { $0.id == id }) else { return }
         selectedItemID = id
         selectedItemIDs = [id]
-        recordUse(itemID: id)
-        refreshItems()
     }
 
     func selectItems(_ itemIDs: Set<UUID>) {

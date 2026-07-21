@@ -635,7 +635,15 @@ private struct ClipboardCard: View {
             Text(item.customTitle ?? defaultTitle)
                 .font(.system(size: 16, weight: .bold))
                 .lineLimit(1)
-                .highPriorityGesture(TapGesture(count: 2).onEnded(startTitleEditing))
+                .highPriorityGesture(TapGesture().onEnded(handleTitleTap))
+        }
+    }
+
+    private func handleTitleTap() {
+        if isSelected {
+            startTitleEditing()
+        } else {
+            onSelect()
         }
     }
 
