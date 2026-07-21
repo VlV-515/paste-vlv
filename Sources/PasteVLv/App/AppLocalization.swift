@@ -79,6 +79,9 @@ struct AppCopy {
     var name: String { choose("Name", "Nombre") }
     var rename: String { choose("Rename", "Renombrar") }
     var delete: String { choose("Delete", "Eliminar") }
+    var deleteConfirmationTitle: String { choose("Delete item?", "¿Eliminar elemento?") }
+    var deleteGroupConfirmationTitle: String { choose("Delete group?", "¿Eliminar grupo?") }
+    var clearHistoryConfirmationTitle: String { choose("Clear clipboard history?", "¿Limpiar historial del portapapeles?") }
     var addGroup: String { choose("Add group", "Agregar grupo") }
     var emptyHistory: String { choose("Copy something to start your history", "Copia algo para iniciar el historial") }
     var shortcutOpensApp: String { choose(" opens ", " abre ") }
@@ -127,6 +130,36 @@ struct AppCopy {
         case (.spanish, .image): return "Imagen"
         case (.spanish, .file): return "Archivo"
         }
+    }
+
+    func files(_ count: Int) -> String {
+        switch language {
+        case .english:
+            return count == 1 ? "1 file" : "\(count) files"
+        case .spanish:
+            return count == 1 ? "1 archivo" : "\(count) archivos"
+        }
+    }
+
+    func deleteItemsMessage(_ count: Int) -> String {
+        choose(
+            count == 1 ? "This item will be removed." : "These \(count) items will be removed.",
+            count == 1 ? "Este elemento se eliminará." : "Estos \(count) elementos se eliminarán."
+        )
+    }
+
+    func deleteGroupMessage(_ name: String) -> String {
+        choose(
+            "Delete \"\(name)\"? Its items will return to clipboard history.",
+            "¿Eliminar \"\(name)\"? Sus elementos volverán al historial del portapapeles."
+        )
+    }
+
+    var clearHistoryConfirmationMessage: String {
+        choose(
+            "Ungrouped items will be deleted. Items in groups will only be removed from history.",
+            "Los elementos sin grupo se eliminarán. Los elementos en grupos solo se quitarán del historial."
+        )
     }
 
     func colorName(_ hex: String) -> String {

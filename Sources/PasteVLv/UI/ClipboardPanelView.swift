@@ -13,6 +13,7 @@ private let pinboardPalette = [
 ]
 
 private let selectedCardOutline = Color(red: 0.84, green: 0.62, blue: 0.26)
+private let pinboardDragType = UTType(exportedAs: "dev.vlv.pastevlv.pinboard")
 
 struct ClipboardPanelView: View {
     @ObservedObject var appState: AppState
@@ -26,6 +27,7 @@ struct ClipboardPanelView: View {
     @State private var isEditingItemTitle = false
     @State private var newPinboardName = ""
     @State private var newPinboardColor = pinboardPalette[0]
+    @State private var pendingDeletion: PendingDeletion?
 
     private var copy: AppCopy {
         AppCopy(language: appState.appLanguage)
@@ -67,6 +69,16 @@ struct ClipboardPanelView: View {
                 handleKeyDown(event)
             }
         )
+        .alert(item: $pendingDeletion) { request in
+            Alert(
+                title: Text(request.title(copy)),
+                message: Text(request.message(copy)),
+                primaryButton: .destructive(Text(copy.delete)) {
+                    performDeletion(request)
+                },
+                secondaryButton: .cancel(Text(copy.cancel))
+            )
+        }
     }
 
     private var topBar: some View {
@@ -127,12 +139,15 @@ struct ClipboardPanelView: View {
                                 isSelected: appState.selectedPinboardID == pinboard.id,
                                 onSelect: { appState.select(pinboardID: pinboard.id) }
                             )
+                            .onDrag {
+                                pinboardDragProvider(for: pinboard.id)
+                            }
                             .contextMenu {
                                 Button(copy.rename) {
                                     editingPinboard = pinboard
                                 }
                                 Button(role: .destructive) {
-                                    appState.delete(pinboardID: pinboard.id)
+                                    pendingDeletion = .pinboard(pinboard)
                                 } label: {
                                     Text(copy.delete)
                                 }
@@ -154,8 +169,8 @@ struct ClipboardPanelView: View {
                                     }
                                 }
                             }
-                            .onDrop(of: [UTType.text], isTargeted: nil) { providers in
-                                assignDroppedItem(providers: providers, to: pinboard.id)
+                            .onDrop(of: [pinboardDragType, UTType.text], isTargeted: nil) { providers in
+                                handlePinboardDrop(providers: providers, targetPinboardID: pinboard.id)
                             }
                         }
                     }
@@ -190,6 +205,7 @@ struct ClipboardPanelView: View {
                                     item: item,
                                     index: index,
                                     accentHex: appState.colorHex(for: item),
+                                    sourceColorHex: ClipboardSourceAppearance.colorHex(for: item),
                                     pinboardName: appState.pinboardName(for: item),
                                     pinboards: appState.pinboards,
                                     copy: AppCopy(language: appState.appLanguage),
@@ -199,7 +215,7 @@ struct ClipboardPanelView: View {
                                     onPastePlain: { onPaste(item, true) },
                                     onFavorite: { appState.toggleFavorite(itemID: item.id) },
                                     onPin: { appState.togglePinned(itemID: item.id) },
-                                    onDelete: { appState.delete(itemID: item.id) },
+                                    onDelete: { pendingDeletion = .items([item.id]) },
                                     onAssign: { appState.assign(itemID: item.id, to: $0) },
                                     onRename: { appState.updateTitle(itemID: item.id, title: $0) },
                                     onTitleEditingChanged: { isEditingItemTitle = $0 }
@@ -309,10 +325,85 @@ struct ClipboardPanelView: View {
             return true
         case 117 where modifiers.isEmpty:
             guard appState.selectedItem != nil else { return false }
-            appState.deleteSelectedItems()
+            let itemIDs = appState.selectedItemIDsForDeletion()
+            guard !itemIDs.isEmpty else { return false }
+            pendingDeletion = .items(itemIDs)
             return true
         default:
             return false
+        }
+    }
+
+    private func pinboardDragProvider(for id: UUID) -> NSItemProvider {
+        let provider = NSItemProvider()
+        provider.registerDataRepresentation(
+            forTypeIdentifier: pinboardDragType.identifier,
+            visibility: .all
+        ) { completion in
+            completion(Data(id.uuidString.utf8), nil)
+            return nil
+        }
+        return provider
+    }
+
+    private func handlePinboardDrop(providers: [NSItemProvider], targetPinboardID: UUID) -> Bool {
+        if let provider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(pinboardDragType.identifier)
+        }) {
+            provider.loadDataRepresentation(forTypeIdentifier: pinboardDragType.identifier) { data, _ in
+                guard let data,
+                      let idString = String(data: data, encoding: .utf8),
+                      let id = UUID(uuidString: idString) else {
+                    return
+                }
+                Task { @MainActor in
+                    appState.reorder(pinboardID: id, before: targetPinboardID)
+                }
+            }
+            return true
+        }
+
+        return assignDroppedItem(providers: providers, to: targetPinboardID)
+    }
+
+    private func performDeletion(_ request: PendingDeletion) {
+        switch request {
+        case .items(let itemIDs):
+            appState.delete(itemIDs: itemIDs)
+        case .pinboard(let pinboard):
+            appState.delete(pinboardID: pinboard.id)
+        }
+    }
+}
+
+private enum PendingDeletion: Identifiable {
+    case items(Set<UUID>)
+    case pinboard(Pinboard)
+
+    var id: String {
+        switch self {
+        case .items(let itemIDs):
+            return itemIDs.map(\.uuidString).sorted().joined(separator: ",")
+        case .pinboard(let pinboard):
+            return pinboard.id.uuidString
+        }
+    }
+
+    func title(_ copy: AppCopy) -> String {
+        switch self {
+        case .items:
+            return copy.deleteConfirmationTitle
+        case .pinboard:
+            return copy.deleteGroupConfirmationTitle
+        }
+    }
+
+    func message(_ copy: AppCopy) -> String {
+        switch self {
+        case .items(let itemIDs):
+            return copy.deleteItemsMessage(itemIDs.count)
+        case .pinboard(let pinboard):
+            return copy.deleteGroupMessage(pinboard.name)
         }
     }
 }
@@ -347,6 +438,7 @@ private struct ClipboardCard: View {
     let item: ClipboardItem
     let index: Int
     let accentHex: String
+    let sourceColorHex: String
     let pinboardName: String?
     let pinboards: [Pinboard]
     let copy: AppCopy
@@ -439,7 +531,7 @@ private struct ClipboardCard: View {
         .padding(.trailing, 8)
         .padding(.top, 10)
         .frame(height: 62)
-        .background(Color(hex: accentHex))
+        .background(Color(hex: sourceColorHex))
     }
 
     @ViewBuilder
@@ -456,7 +548,7 @@ private struct ClipboardCard: View {
                     }
                 }
         } else {
-            Text(item.customTitle ?? copy.clipboardKindTitle(item.kind))
+            Text(item.customTitle ?? defaultTitle)
                 .font(.system(size: 21, weight: .medium))
                 .lineLimit(1)
                 .highPriorityGesture(TapGesture(count: 2).onEnded(startTitleEditing))
@@ -477,15 +569,13 @@ private struct ClipboardCard: View {
 
     @ViewBuilder
     private var sourceIcon: some View {
-        if item.kind == .file {
-            Image(systemName: "folder.fill")
-                .font(.system(size: 44))
-                .foregroundStyle(.white.opacity(0.62))
-                .offset(y: 8)
-        } else if item.sourceAppName?.lowercased().contains("visual studio") == true {
-            Image(systemName: "chevron.left.forwardslash.chevron.right")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(.white.opacity(0.74))
+        if let sourceIcon = ClipboardSourceAppearance.icon(for: item) {
+            Image(nsImage: sourceIcon)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 42, height: 42)
+                .shadow(color: .black.opacity(0.26), radius: 2, y: 1)
         } else {
             Image(systemName: item.kind.iconName)
                 .font(.system(size: 34, weight: .semibold))
@@ -548,18 +638,38 @@ private struct ClipboardCard: View {
     }
 
     private var filePreview: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "folder.fill")
-                .font(.system(size: 84))
-                .foregroundStyle(Color(hex: accentHex).opacity(0.85))
-            Text(item.preview)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 9) {
+                Image(systemName: filePaths.count > 1 ? "doc.on.doc.fill" : "doc.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(Color(hex: sourceColorHex).opacity(0.88))
+                Text(copy.files(filePaths.count))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.primary)
+            }
+
+            Divider()
+
+            ForEach(Array(filePaths.prefix(3).enumerated()), id: \.offset) { _, path in
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(URL(fileURLWithPath: path).lastPathComponent)
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                    Text(path)
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            if filePaths.count > 3 {
+                Text("+ \(filePaths.count - 3)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(12)
     }
 
     private var footer: some View {
@@ -587,8 +697,43 @@ private struct ClipboardCard: View {
         case .image:
             return copy.itemKindDetail(.image)
         case .file:
-            return copy.itemKindDetail(.file)
+            return copy.files(filePaths.count)
         }
+    }
+
+    private var defaultTitle: String {
+        item.kind == .file ? copy.files(filePaths.count) : copy.clipboardKindTitle(item.kind)
+    }
+
+    private var filePaths: [String] {
+        let paths = (item.filePath ?? "")
+            .split(separator: "\n")
+            .map(String.init)
+        return paths.isEmpty ? [item.preview] : paths
+    }
+}
+
+private enum ClipboardSourceAppearance {
+    static func colorHex(for item: ClipboardItem) -> String {
+        let bundleID = item.sourceAppBundleID?.lowercased() ?? ""
+
+        if bundleID == "com.apple.finder" { return "#5AA5EE" }
+        if bundleID == "dev.vlv.pastevlv" { return "#F4B942" }
+        if bundleID.contains("openai") { return "#8A8A8A" }
+
+        let palette = ["#5AA5EE", "#A78BFA", "#22C55E", "#F59E0B", "#EC4899", "#64748B"]
+        let value = (item.sourceAppBundleID ?? item.sourceAppName ?? item.kind.rawValue)
+            .unicodeScalars
+            .reduce(0) { ($0 &* 31) &+ Int($1.value) }
+        return palette[abs(value) % palette.count]
+    }
+
+    static func icon(for item: ClipboardItem) -> NSImage? {
+        guard let bundleID = item.sourceAppBundleID,
+              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+            return nil
+        }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
 }
 

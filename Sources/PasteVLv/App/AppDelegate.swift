@@ -116,9 +116,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureClipboardMonitor() {
-        clipboardMonitor.onCapture = { [weak self] in
+        clipboardMonitor.onCapture = { [weak self] item in
             Task { @MainActor in
-                self?.appState.refreshAll()
+                self?.appState.handleCapturedItem(item)
             }
         }
         clipboardMonitor.start()

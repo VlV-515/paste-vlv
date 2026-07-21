@@ -126,6 +126,7 @@ private struct AboutLink: View {
 
 private struct GeneralPreferencesView: View {
     @ObservedObject var appState: AppState
+    @State private var isConfirmingClearHistory = false
 
     var body: some View {
         let copy = AppCopy(language: appState.appLanguage)
@@ -172,7 +173,7 @@ private struct GeneralPreferencesView: View {
             HStack {
                 Spacer()
                 Button(copy.clearHistory) {
-                    appState.clearHistory()
+                    isConfirmingClearHistory = true
                 }
                 Spacer()
             }
@@ -194,6 +195,14 @@ private struct GeneralPreferencesView: View {
         .padding(.top, 22)
         .padding(.horizontal, 34)
         .padding(.bottom, 18)
+        .alert(copy.clearHistoryConfirmationTitle, isPresented: $isConfirmingClearHistory) {
+            Button(copy.delete, role: .destructive) {
+                appState.clearHistory()
+            }
+            Button(copy.cancel, role: .cancel) {}
+        } message: {
+            Text(copy.clearHistoryConfirmationMessage)
+        }
     }
 }
 

@@ -7,7 +7,7 @@ final class ClipboardMonitor {
     private var timer: Timer?
     private var lastChangeCount = NSPasteboard.general.changeCount
 
-    var onCapture: (() -> Void)?
+    var onCapture: ((ClipboardItem?) -> Void)?
 
     init(repository: ClipboardRepository, settings: AppSettings) {
         self.repository = repository
@@ -40,8 +40,7 @@ final class ClipboardMonitor {
         }
 
         guard let content = Self.capture(from: pasteboard, sourceApp: sourceApp) else { return }
-        repository.addCapturedContent(content)
-        onCapture?()
+        onCapture?(repository.addCapturedContent(content))
     }
 
     private static func capture(from pasteboard: NSPasteboard, sourceApp: NSRunningApplication?) -> CapturedClipboardContent? {

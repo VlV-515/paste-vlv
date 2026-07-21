@@ -21,10 +21,11 @@
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays Paste-style horizontal history cards,
-   pinboards, search, color-coded group state, first-item preselection on open,
-   left/right keyboard navigation, `Return` paste, `Cmd-A` selection, `Forward Delete`
-   removal, editable card titles, and double-click paste. A global mouse monitor hides its floating panel after
-   a click in another app.
+   source-app icons/colors, file counts and paths, draggable/reorderable pinboard
+   chips, search, color-coded group state, first-item preselection on open,
+   left/right keyboard navigation, `Return` paste, `Cmd-A` selection, confirmed
+   `Forward Delete` removal, editable card titles, and double-click paste. A
+   global mouse monitor hides its floating panel after a click in another app.
 7. `AppState` opens native import/export panels for group backups and delegates
    JSON archive reads/writes to `ClipboardRepository`.
 8. `AppSettings` persists the selected app language. `AppCopy` supplies English
@@ -53,6 +54,9 @@
   - favorite, pinned, and optional pinboard assignment
 - `PinboardEntity`
   - name, color, sort order, creation date
+- `AppSettings.hiddenHistoryItemIDs`
+  - UUIDs for grouped cards removed from Clipboard History; those cards remain
+    available from their pinboard until deleted there
 - Images are stored as files in Application Support and referenced by path.
 - JSON import/export uses schema version `3` and contains:
   - pinboards with stable UUIDs

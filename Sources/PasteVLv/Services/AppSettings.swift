@@ -80,6 +80,10 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(appLanguage.rawValue, forKey: Keys.appLanguage) }
     }
 
+    @Published var hiddenHistoryItemIDs: Set<UUID> {
+        didSet { defaults.set(hiddenHistoryItemIDs.map(\.uuidString), forKey: Keys.hiddenHistoryItemIDs) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -96,6 +100,7 @@ final class AppSettings: ObservableObject {
         self.excludedBundleIDs = Set(excluded)
         self.openShortcut = Self.loadShortcut(defaults: defaults, key: Keys.openShortcut) ?? .defaultOpen
         self.appLanguage = AppLanguage(rawValue: defaults.string(forKey: Keys.appLanguage) ?? "") ?? .english
+        self.hiddenHistoryItemIDs = Set((defaults.stringArray(forKey: Keys.hiddenHistoryItemIDs) ?? []).compactMap(UUID.init(uuidString:)))
     }
 
     func toggleExcluded(bundleID: String) {
@@ -104,6 +109,14 @@ final class AppSettings: ObservableObject {
         } else {
             excludedBundleIDs.insert(bundleID)
         }
+    }
+
+    func hideFromHistory(_ itemIDs: Set<UUID>) {
+        hiddenHistoryItemIDs.formUnion(itemIDs)
+    }
+
+    func restoreToHistory(_ itemIDs: Set<UUID>) {
+        hiddenHistoryItemIDs.subtract(itemIDs)
     }
 
     private func saveShortcut(_ shortcut: HotKeyShortcut, key: String) {
@@ -127,5 +140,6 @@ final class AppSettings: ObservableObject {
         static let excludedBundleIDs = "excludedBundleIDs"
         static let openShortcut = "openShortcut"
         static let appLanguage = "appLanguage"
+        static let hiddenHistoryItemIDs = "hiddenHistoryItemIDs"
     }
 }

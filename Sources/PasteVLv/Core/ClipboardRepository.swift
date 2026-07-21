@@ -52,7 +52,12 @@ final class ClipboardRepository {
         }
     }
 
-    func fetchItems(search: String, pinboardID: UUID?, limit: Int = 200) -> [ClipboardItem] {
+    func fetchItems(
+        search: String,
+        pinboardID: UUID?,
+        hiddenHistoryItemIDs: Set<UUID> = [],
+        limit: Int = 200
+    ) -> [ClipboardItem] {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
         request.fetchLimit = limit
         request.sortDescriptors = [
@@ -63,6 +68,8 @@ final class ClipboardRepository {
         var predicates: [NSPredicate] = []
         if let pinboardID {
             predicates.append(NSPredicate(format: "pinboardID == %@", pinboardID as CVarArg))
+        } else if !hiddenHistoryItemIDs.isEmpty {
+            predicates.append(NSPredicate(format: "NOT (id IN %@)", Array(hiddenHistoryItemIDs)))
         }
 
         let trimmed = search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -194,6 +201,23 @@ final class ClipboardRepository {
         save()
     }
 
+    func reorderPinboard(id: UUID, before targetID: UUID) {
+        var pinboards = fetchPinboards()
+        guard id != targetID,
+              let sourceIndex = pinboards.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        let moved = pinboards.remove(at: sourceIndex)
+        guard let targetIndex = pinboards.firstIndex(where: { $0.id == targetID }) else { return }
+        pinboards.insert(moved, at: targetIndex)
+
+        for (index, pinboard) in pinboards.enumerated() {
+            findPinboard(id: pinboard.id)?.sortOrder = Int16(index)
+        }
+        save()
+    }
+
     func deletePinboard(id: UUID) {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
         request.predicate = NSPredicate(format: "pinboardID == %@", id as CVarArg)
@@ -228,7 +252,10 @@ final class ClipboardRepository {
     func cleanupItems(olderThan date: Date?) {
         guard let date else { return }
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "ClipboardItemEntity")
-        request.predicate = NSPredicate(format: "createdAt < %@ AND isPinned == NO AND isFavorite == NO", date as NSDate)
+        request.predicate = NSPredicate(
+            format: "createdAt < %@ AND pinboardID == nil AND isPinned == NO AND isFavorite == NO",
+            date as NSDate
+        )
         let delete = NSBatchDeleteRequest(fetchRequest: request)
 
         do {

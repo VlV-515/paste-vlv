@@ -147,15 +147,17 @@ Open the panel and start typing: search is focused automatically. Results match 
 | Delete selected card(s) | `Forward Delete` |
 | Close the panel | Click another app/window or use the panel menu |
 
-Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
+Each card shows the app that supplied the copy through its macOS app icon and a source color. File cards show the number of copied files plus their names and paths. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
 
 ### Organize with pinboards
 
-Pinboards are color-coded spaces for the things you want to reuse: snippets, project links, visual references, or any copied item. Create one with the `+` button, choose a name and color, then drag a card onto it or use the card’s **Move to group** menu.
+Pinboards are color-coded spaces for the things you want to reuse: snippets, project links, visual references, or any copied item. Create one with the `+` button, choose a name and color, then drag a card onto it or use the card’s **Move to group** menu. Drag a pinboard chip onto another chip to reorder the group tabs.
 
 ![Creating a color-coded pinboard](docs/images/create-pinboard.png)
 
 You can rename a pinboard, change its color, or delete it from its contextual menu. Deleting a pinboard does **not** delete its cards; it returns them to general history.
+
+Deleting a card from **Clipboard History** removes it permanently only when it has no group. A grouped card is removed from History while its group copy stays intact. Delete it from inside its group to remove it permanently. Paste-vlv asks for confirmation before deleting cards, groups, or clearing history.
 
 ### Tune the behavior
 

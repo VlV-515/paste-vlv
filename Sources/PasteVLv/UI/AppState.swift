@@ -86,7 +86,11 @@ final class AppState: ObservableObject {
 
     func refreshItems(resetSelection: Bool = false) {
         let previousSelection = selectedItemID
-        items = repository.fetchItems(search: searchText, pinboardID: selectedPinboardID)
+        items = repository.fetchItems(
+            search: searchText,
+            pinboardID: selectedPinboardID,
+            hiddenHistoryItemIDs: settings.hiddenHistoryItemIDs
+        )
         lastSourceAppName = items.first?.sourceAppName
 
         if resetSelection {
@@ -123,6 +127,7 @@ final class AppState: ObservableObject {
         let allItems = repository.fetchItems(
             search: searchText,
             pinboardID: selectedPinboardID,
+            hiddenHistoryItemIDs: settings.hiddenHistoryItemIDs,
             limit: .max
         )
         selectedItemIDs = Set(allItems.map(\.id))
@@ -166,15 +171,27 @@ final class AppState: ObservableObject {
     }
 
     func delete(pinboardID: UUID) {
+        let itemIDs = Set(
+            repository.fetchItems(search: "", pinboardID: pinboardID, limit: .max).map(\.id)
+        )
         repository.deletePinboard(id: pinboardID)
+        settings.restoreToHistory(itemIDs)
         if selectedPinboardID == pinboardID {
             selectedPinboardID = nil
         }
         refreshAll()
     }
 
+    func reorder(pinboardID: UUID, before targetPinboardID: UUID) {
+        repository.reorderPinboard(id: pinboardID, before: targetPinboardID)
+        refreshAll()
+    }
+
     func assign(itemID: UUID, to pinboardID: UUID?) {
         repository.assign(itemID: itemID, to: pinboardID)
+        if pinboardID == nil {
+            settings.restoreToHistory([itemID])
+        }
         refreshItems()
     }
 
@@ -189,22 +206,32 @@ final class AppState: ObservableObject {
     }
 
     func delete(itemID: UUID) {
-        repository.delete(itemID: itemID)
-        selectedItemIDs.remove(itemID)
-        refreshItems()
+        delete(itemIDs: [itemID])
     }
 
-    func deleteSelectedItems() {
-        let itemIDs: Set<UUID>
-        if selectedItemIDs.isEmpty {
-            itemIDs = selectedItem.map { [$0.id] } ?? []
+    func delete(itemIDs: Set<UUID>) {
+        guard !itemIDs.isEmpty else { return }
+
+        if selectedPinboardID == nil {
+            let groupedItemIDs = Set(
+                items.lazy
+                    .filter { itemIDs.contains($0.id) && $0.pinboardID != nil }
+                    .map(\.id)
+            )
+            settings.hideFromHistory(groupedItemIDs)
+            repository.delete(itemIDs: itemIDs.subtracting(groupedItemIDs))
         } else {
-            itemIDs = selectedItemIDs
+            repository.delete(itemIDs: itemIDs)
+            settings.restoreToHistory(itemIDs)
         }
-        repository.delete(itemIDs: itemIDs)
+
         selectedItemID = nil
-        selectedItemIDs = []
+        selectedItemIDs.subtract(itemIDs)
         refreshItems(resetSelection: true)
+    }
+
+    func selectedItemIDsForDeletion() -> Set<UUID> {
+        selectedItemIDs.isEmpty ? (selectedItem.map { [$0.id] } ?? []) : selectedItemIDs
     }
 
     func updateTitle(itemID: UUID, title: String?) {
@@ -223,8 +250,18 @@ final class AppState: ObservableObject {
     }
 
     func clearHistory() {
-        repository.deleteAllItems()
-        refreshItems()
+        let allItems = repository.fetchItems(search: "", pinboardID: nil, limit: .max)
+        let groupedItemIDs = Set(allItems.filter { $0.pinboardID != nil }.map(\.id))
+        settings.hideFromHistory(groupedItemIDs)
+        repository.delete(itemIDs: Set(allItems.map(\.id)).subtracting(groupedItemIDs))
+        refreshItems(resetSelection: true)
+    }
+
+    func handleCapturedItem(_ item: ClipboardItem?) {
+        if let item {
+            settings.restoreToHistory([item.id])
+        }
+        refreshAll()
     }
 
     func exportHistoryInteractively() {

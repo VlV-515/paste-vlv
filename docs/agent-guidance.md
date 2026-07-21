@@ -38,3 +38,12 @@ Current user-facing backup behavior:
   purpose. Export should warn about that size-saving filter.
 - If the archive schema changes, update `README.md`, `docs/ARCHITECTURE.md`,
   and `docs/commands.md` in the same change.
+
+Current history and pinboard behavior:
+
+- Pinboard chip order is stored through `Pinboard.sortOrder`; drag a chip onto
+  another chip to reorder it without changing card assignments.
+- A grouped card removed from Clipboard History is tracked in
+  `AppSettings.hiddenHistoryItemIDs` and remains in its pinboard. Delete it
+  while viewing that pinboard for permanent removal.
+- Confirm every destructive card, group, or clear-history action in the UI.
