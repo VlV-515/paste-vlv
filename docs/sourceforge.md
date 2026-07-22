@@ -7,7 +7,7 @@ Project:
 
 - Admin: `https://sourceforge.net/p/paste-vlv/admin/`
 - Public project: `https://sourceforge.net/projects/paste-vlv/`
-- Release files: `https://sourceforge.net/projects/paste-vlv/files/v1.3.0/`
+- Release files: `https://sourceforge.net/projects/paste-vlv/files/v1.3.1/`
 - Username: `vlv`
 
 ## What SourceForge Needs
@@ -25,15 +25,15 @@ SFTP, SCP, and rsync. Release files live under:
 ## Prepare Local Files
 
 ```sh
-./scripts/prepare-sourceforge-release.sh 1.3.0
+./scripts/prepare-sourceforge-release.sh 1.3.1
 ```
 
 This creates:
 
 ```text
-dist/sourceforge/v1.3.0/Paste-vlv-1.3.0-macos-unsigned.zip
-dist/sourceforge/v1.3.0/Paste-vlv-1.3.0-macos-unsigned.zip.sha256
-dist/sourceforge/v1.3.0/readme.md
+dist/sourceforge/v1.3.1/Paste-vlv-1.3.1-macos-unsigned.zip
+dist/sourceforge/v1.3.1/Paste-vlv-1.3.1-macos-unsigned.zip.sha256
+dist/sourceforge/v1.3.1/readme.md
 ```
 
 The `readme.md` file appears as release notes in the SourceForge file browser.
@@ -42,11 +42,11 @@ The `readme.md` file appears as release notes in the SourceForge file browser.
 
 1. Open the SourceForge project.
 2. Go to Files.
-3. Add folder `v1.3.0`.
+3. Add folder `v1.3.1`.
 4. Upload:
-   - `dist/sourceforge/v1.3.0/Paste-vlv-1.3.0-macos-unsigned.zip`
-   - `dist/sourceforge/v1.3.0/Paste-vlv-1.3.0-macos-unsigned.zip.sha256`
-   - `dist/sourceforge/v1.3.0/readme.md`
+   - `dist/sourceforge/v1.3.1/Paste-vlv-1.3.1-macos-unsigned.zip`
+   - `dist/sourceforge/v1.3.1/Paste-vlv-1.3.1-macos-unsigned.zip.sha256`
+   - `dist/sourceforge/v1.3.1/readme.md`
 5. Mark the ZIP as the default macOS download if SourceForge asks.
 
 ## Upload With SSH
@@ -66,19 +66,19 @@ Equivalent explicit command:
 The script uploads to:
 
 ```text
-/home/frs/project/paste-vlv/v1.3.0/
+/home/frs/project/paste-vlv/v1.3.1/
 ```
 
 After upload, the public folder should be:
 
 ```text
-https://sourceforge.net/projects/paste-vlv/files/v1.3.0/
+https://sourceforge.net/projects/paste-vlv/files/v1.3.1/
 ```
 
 Direct ZIP download:
 
 ```text
-https://sourceforge.net/projects/paste-vlv/files/v1.3.0/Paste-vlv-1.3.0-macos-unsigned.zip/download
+https://sourceforge.net/projects/paste-vlv/files/v1.3.1/Paste-vlv-1.3.1-macos-unsigned.zip/download
 ```
 
 ## SSH Key Setup
@@ -129,5 +129,5 @@ This matches SourceForge's published fingerprint for `web.sourceforge.net`,
 
 ## Signing Status
 
-Current `v1.3.0` files are ad-hoc signed, not Developer ID signed, and not
+Current `v1.3.1` files are ad-hoc signed, not Developer ID signed, and not
 notarized. SourceForge is only a mirror; it does not change Gatekeeper behavior.

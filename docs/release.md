@@ -18,21 +18,21 @@ The current public build is an unsigned release:
 
 ```sh
 swift build
-./scripts/package-release.sh 1.3.0
+./scripts/package-release.sh 1.3.1
 ```
 
 Generated files:
 
 ```text
 dist/Paste vlv.app
-dist/Paste-vlv-1.3.0-macos-unsigned.zip
-dist/Paste-vlv-1.3.0-macos-unsigned.zip.sha256
+dist/Paste-vlv-1.3.1-macos-unsigned.zip
+dist/Paste-vlv-1.3.1-macos-unsigned.zip.sha256
 ```
 
 ## Create The Git Tag
 
 ```sh
-git tag -a v1.3.0 -m "v1.3.0"
+git tag -a v1.3.1 -m "v1.3.1"
 git push origin main
 git push origin v1.3.0
 ```
@@ -42,11 +42,11 @@ git push origin v1.3.0
 If `gh` is installed and authenticated:
 
 ```sh
-gh release create v1.3.0 \
-  dist/Paste-vlv-1.3.0-macos-unsigned.zip \
-  dist/Paste-vlv-1.3.0-macos-unsigned.zip.sha256 \
-  --title "Paste vlv v1.3.0" \
-  --notes-file .github/release-notes/v1.3.0.md
+gh release create v1.3.1 \
+  dist/Paste-vlv-1.3.1-macos-unsigned.zip \
+  dist/Paste-vlv-1.3.1-macos-unsigned.zip.sha256 \
+  --title "Paste vlv v1.3.1" \
+  --notes-file .github/release-notes/v1.3.1.md
 ```
 
 ## Publish From GitHub Web
@@ -54,12 +54,12 @@ gh release create v1.3.0 \
 1. Open the repository on GitHub.
 2. Go to Releases.
 3. Choose Draft a new release.
-4. Select tag `v1.3.0`.
-5. Set title `Paste vlv v1.3.0`.
-6. Paste `.github/release-notes/v1.3.0.md`.
+4. Select tag `v1.3.1`.
+5. Set title `Paste vlv v1.3.1`.
+6. Paste `.github/release-notes/v1.3.1.md`.
 7. Upload:
-   - `dist/Paste-vlv-1.3.0-macos-unsigned.zip`
-   - `dist/Paste-vlv-1.3.0-macos-unsigned.zip.sha256`
+   - `dist/Paste-vlv-1.3.1-macos-unsigned.zip`
+   - `dist/Paste-vlv-1.3.1-macos-unsigned.zip.sha256`
 8. Publish.
 
 ## Publish SourceForge Mirror
@@ -67,7 +67,7 @@ gh release create v1.3.0 \
 Prepare files:
 
 ```sh
-./scripts/prepare-sourceforge-release.sh 1.3.0
+./scripts/prepare-sourceforge-release.sh 1.3.1
 ```
 
 Then upload through SourceForge Files or SSH. See `docs/sourceforge.md`.
