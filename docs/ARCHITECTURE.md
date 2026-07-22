@@ -21,6 +21,7 @@
    `CapturedClipboardContent`.
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays dark Paste-style horizontal history cards,
+   preserving line breaks and exposing tabs and invisible spacing characters in text previews,
    source-app icons/colors, single/multi-file presentations, rich URL metadata
    previews, draggable/reorderable pinboard chips and grouped cards, search, color-coded group
    state, Clipboard History reset and first-item preselection on open, mouse drag-rectangle multi-selection,

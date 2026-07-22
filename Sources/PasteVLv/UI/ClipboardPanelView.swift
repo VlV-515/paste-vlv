@@ -825,10 +825,11 @@ private struct ClipboardCard: View {
             case .link:
                 linkPreview
             case .text:
-                Text(item.preview)
-                    .font(.system(size: 12.5, weight: .medium))
+                Text(textPreview)
+                    .font(.system(size: 12.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(6)
+                    .lineSpacing(2)
                     .padding(13)
             }
         }
@@ -916,7 +917,7 @@ private struct ClipboardCard: View {
     private var footerDetail: String {
         switch item.kind {
         case .text, .link:
-            return copy.characters(item.preview.count)
+            return copy.characters(textContent.count)
         case .image:
             return copy.itemKindDetail(.image)
         case .file:
@@ -926,6 +927,14 @@ private struct ClipboardCard: View {
 
     private var defaultTitle: String {
         item.kind == .file ? copy.files(filePaths.count) : copy.clipboardKindTitle(item.kind)
+    }
+
+    private var textContent: String {
+        item.text ?? item.preview
+    }
+
+    private var textPreview: String {
+        textContent.visibleStructure
     }
 
     private var usesPinboardAppearance: Bool {
@@ -966,6 +975,34 @@ private struct ClipboardCard: View {
             .split(separator: "\n")
             .map(String.init)
         return paths.isEmpty ? [item.preview] : paths
+    }
+}
+
+private extension String {
+    var visibleStructure: String {
+        replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .unicodeScalars
+            .reduce(into: "") { preview, scalar in
+                switch scalar.value {
+                case 0x0009:
+                    preview += "⇥   "
+                case 0x000A, 0x2028, 0x2029:
+                    preview += "↵\n"
+                case 0x00A0:
+                    preview += "⍽"
+                case 0x200B:
+                    preview += "⟪ZWSP⟫"
+                case 0x200C:
+                    preview += "⟪ZWNJ⟫"
+                case 0x200D:
+                    preview += "⟪ZWJ⟫"
+                case 0xFEFF:
+                    preview += "⟪BOM⟫"
+                default:
+                    preview.unicodeScalars.append(scalar)
+                }
+            }
     }
 }
 

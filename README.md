@@ -147,7 +147,7 @@ Open the panel and start typing: search is focused automatically. Each opening s
 | Delete selected card(s) | `Forward Delete` |
 | Close the panel | Click another app/window or use the panel menu |
 
-Cards use Paste-inspired dark surfaces, strong source-app headers, rounded corners, and macOS app icons. File cards keep a single-file thumbnail/path or a compact multi-file presentation; URL cards load a local rich preview when metadata is available. Drag across cards to select several items before deleting them. Inside a selected group, drag a card onto another card to reorder that group manually. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
+Cards use Paste-inspired dark surfaces, strong source-app headers, rounded corners, and macOS app icons. Text cards preserve copied line breaks and mark tabs and invisible spacing characters, so structured snippets remain readable. File cards keep a single-file thumbnail/path or a compact multi-file presentation; URL cards load a local rich preview when metadata is available. Drag across cards to select several items before deleting them. Inside a selected group, drag a card onto another card to reorder that group manually. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
 
 ### Organize with pinboards
 
