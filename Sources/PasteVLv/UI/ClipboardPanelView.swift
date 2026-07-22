@@ -934,7 +934,7 @@ private struct ClipboardCard: View {
     }
 
     private var textPreview: String {
-        textContent.visibleStructure
+        textContent
     }
 
     private var usesPinboardAppearance: Bool {
@@ -975,34 +975,6 @@ private struct ClipboardCard: View {
             .split(separator: "\n")
             .map(String.init)
         return paths.isEmpty ? [item.preview] : paths
-    }
-}
-
-private extension String {
-    var visibleStructure: String {
-        replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-            .unicodeScalars
-            .reduce(into: "") { preview, scalar in
-                switch scalar.value {
-                case 0x0009:
-                    preview += "⇥   "
-                case 0x000A, 0x2028, 0x2029:
-                    preview += "↵\n"
-                case 0x00A0:
-                    preview += "⍽"
-                case 0x200B:
-                    preview += "⟪ZWSP⟫"
-                case 0x200C:
-                    preview += "⟪ZWNJ⟫"
-                case 0x200D:
-                    preview += "⟪ZWJ⟫"
-                case 0xFEFF:
-                    preview += "⟪BOM⟫"
-                default:
-                    preview.unicodeScalars.append(scalar)
-                }
-            }
     }
 }
 
