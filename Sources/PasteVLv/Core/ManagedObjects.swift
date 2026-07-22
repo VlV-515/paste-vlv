@@ -20,6 +20,7 @@ final class ClipboardItemEntity: NSManagedObject {
     @NSManaged var isFavorite: Bool
     @NSManaged var isPinned: Bool
     @NSManaged var pinboardID: UUID?
+    @NSManaged var sortOrder: Int32
 }
 
 @objc(PinboardEntity)
@@ -50,7 +51,8 @@ extension ClipboardItemEntity {
             contentHash: contentHash,
             isFavorite: isFavorite,
             isPinned: isPinned,
-            pinboardID: pinboardID
+            pinboardID: pinboardID,
+            sortOrder: sortOrder
         )
     }
 }

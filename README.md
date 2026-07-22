@@ -147,7 +147,7 @@ Open the panel and start typing: search is focused automatically. Each opening s
 | Delete selected card(s) | `Forward Delete` |
 | Close the panel | Click another app/window or use the panel menu |
 
-Cards use Paste-inspired dark surfaces, strong source-app headers, rounded corners, and macOS app icons. File cards keep a single-file thumbnail/path or a compact multi-file presentation; URL cards load a local rich preview when metadata is available. Drag across cards to select several items before deleting them. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
+Cards use Paste-inspired dark surfaces, strong source-app headers, rounded corners, and macOS app icons. File cards keep a single-file thumbnail/path or a compact multi-file presentation; URL cards load a local rich preview when metadata is available. Drag across cards to select several items before deleting them. Inside a selected group, drag a card onto another card to reorder that group manually. Each card also has a contextual menu for paste, plain-text paste, favorite, pin, moving between groups, renaming, and deletion. Double-click its title to edit it inline; press `Return` to save.
 
 ### Organize with pinboards
 
@@ -194,10 +194,10 @@ Use **Export groups…** from any of these places:
 - Panel `…` menu
 - Preferences > General > JSON Backup
 
-The saved filename looks like `paste-vlv-groups-YYYY-MM-DD-HH-mm-ss.json`. It is a pretty-printed, versioned JSON archive (current schema: `3`) containing:
+The saved filename looks like `paste-vlv-groups-YYYY-MM-DD-HH-mm-ss.json`. It is a pretty-printed, versioned JSON archive (current schema: `4`) containing:
 
 - Pinboards: stable IDs, names, colors, order, and creation dates
-- **Grouped text items only**: optional custom title, text, preview and search fields, source-app metadata, favorites, pins, group assignment, dates, and content hashes
+- **Grouped text items only**: optional custom title, text, preview and search fields, source-app metadata, favorites, pins, group assignment, dates, manual order, and content hashes
 - Export metadata: app name, bundle identifier, platform, and timestamp
 
 ### What backup intentionally leaves out
@@ -209,7 +209,7 @@ This keeps the JSON portable and reasonably small. The app shows an export summa
 
 ### Import
 
-Choose **Import groups…** from the same menus and select a Paste vlv JSON archive. Import accepts schemas `2` and `3`, validates IDs, group assignments, referenced pinboards, and item types before changing local data. Matching IDs are updated; missing ones are created. The completion message reports both counts.
+Choose **Import groups…** from the same menus and select a Paste vlv JSON archive. Import accepts schemas `2` through `4`, validates IDs, group assignments, referenced pinboards, and item types before changing local data. Matching IDs are updated; missing ones are created. The completion message reports both counts.
 
 ## Data, privacy, and sync
 

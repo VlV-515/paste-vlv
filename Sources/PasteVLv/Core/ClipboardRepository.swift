@@ -11,6 +11,7 @@ final class ClipboardRepository {
 
     func bootstrapPinboardsIfNeeded(language: AppLanguage) {
         backfillLastUsedDates()
+        backfillGroupedItemSortOrders()
 
         let request = NSFetchRequest<PinboardEntity>(entityName: "PinboardEntity")
         request.fetchLimit = 1
@@ -68,7 +69,7 @@ final class ClipboardRepository {
                 NSSortDescriptor(key: "createdAt", ascending: false)
             ]
             : [
-                NSSortDescriptor(key: "isPinned", ascending: false),
+                NSSortDescriptor(key: "sortOrder", ascending: true),
                 NSSortDescriptor(key: "createdAt", ascending: false)
             ]
 
@@ -136,6 +137,7 @@ final class ClipboardRepository {
         item.isFavorite = false
         item.isPinned = false
         item.pinboardID = nil
+        item.sortOrder = 0
         save()
         return item.asDomain()
     }
@@ -151,7 +153,14 @@ final class ClipboardRepository {
         request.predicate = NSPredicate(format: "id IN %@", Array(itemIDs))
 
         do {
-            try context.fetch(request).forEach { $0.pinboardID = pinboardID }
+            var nextSortOrder = pinboardID.flatMap { nextItemSortOrder(in: $0) } ?? 0
+            try context.fetch(request).forEach {
+                $0.pinboardID = pinboardID
+                if pinboardID != nil {
+                    $0.sortOrder = nextSortOrder
+                    nextSortOrder += 1
+                }
+            }
             save()
         } catch {
             NSLog("Unable to assign selected clipboard items: \(error.localizedDescription)")
@@ -248,6 +257,25 @@ final class ClipboardRepository {
         save()
     }
 
+    func reorderItem(id: UUID, in pinboardID: UUID, to destinationIndex: Int) {
+        var items = fetchItemEntities(in: pinboardID)
+        guard let sourceIndex = items.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        let moved = items.remove(at: sourceIndex)
+        let adjustedDestination = destinationIndex > sourceIndex
+            ? destinationIndex - 1
+            : destinationIndex
+        let insertionIndex = min(max(adjustedDestination, 0), items.count)
+        items.insert(moved, at: insertionIndex)
+
+        for (index, item) in items.enumerated() {
+            item.sortOrder = Int32(index)
+        }
+        save()
+    }
+
     func deletePinboard(id: UUID) {
         let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
         request.predicate = NSPredicate(format: "pinboardID == %@", id as CVarArg)
@@ -336,7 +364,16 @@ final class ClipboardRepository {
             entity.createdAt = snapshot.createdAt
         }
 
-        for snapshot in archive.items.sorted(by: { $0.createdAt < $1.createdAt }) {
+        let sortedItems = archive.items.sorted { lhs, rhs in
+            switch (lhs.sortOrder, rhs.sortOrder) {
+            case let (left?, right?) where left != right:
+                return left < right
+            default:
+                return lhs.createdAt > rhs.createdAt
+            }
+        }
+
+        for snapshot in sortedItems {
             let entity: ClipboardItemEntity
             if let existing = findItem(id: snapshot.id) {
                 entity = existing
@@ -363,6 +400,7 @@ final class ClipboardRepository {
             entity.isFavorite = snapshot.isFavorite
             entity.isPinned = snapshot.isPinned
             entity.pinboardID = snapshot.pinboardID
+            entity.sortOrder = snapshot.sortOrder ?? nextItemSortOrder(in: snapshot.pinboardID)
         }
 
         save()
@@ -408,6 +446,54 @@ final class ClipboardRepository {
         }
     }
 
+    private func backfillGroupedItemSortOrders() {
+        for pinboard in fetchPinboards() {
+            let items = fetchItemEntities(in: pinboard.id, sortedByCreationDate: true)
+            guard items.count > 1, items.allSatisfy({ $0.sortOrder == 0 }) else { continue }
+            for (index, item) in items.enumerated() {
+                item.sortOrder = Int32(index)
+            }
+        }
+        save()
+    }
+
+    private func fetchItemEntities(in pinboardID: UUID, sortedByCreationDate: Bool = false) -> [ClipboardItemEntity] {
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.predicate = NSPredicate(format: "pinboardID == %@", pinboardID as CVarArg)
+        request.sortDescriptors = sortedByCreationDate
+            ? [
+                NSSortDescriptor(key: "createdAt", ascending: false)
+            ]
+            : [
+                NSSortDescriptor(key: "sortOrder", ascending: true),
+                NSSortDescriptor(key: "createdAt", ascending: false)
+            ]
+
+        do {
+            return try context.fetch(request)
+        } catch {
+            NSLog("Unable to fetch grouped clipboard items: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    private func nextItemSortOrder(in pinboardID: UUID?) -> Int32 {
+        guard let pinboardID else { return 0 }
+        let request = NSFetchRequest<ClipboardItemEntity>(entityName: "ClipboardItemEntity")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "pinboardID == %@", pinboardID as CVarArg)
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "sortOrder", ascending: false)
+        ]
+
+        do {
+            return (try context.fetch(request).first?.sortOrder ?? -1) + 1
+        } catch {
+            NSLog("Unable to calculate grouped item order: \(error.localizedDescription)")
+            return 0
+        }
+    }
+
     private func save() {
         guard context.hasChanges else { return }
         do {
@@ -445,7 +531,8 @@ final class ClipboardRepository {
                     contentHash: entity.contentHash,
                     isFavorite: entity.isFavorite,
                     isPinned: entity.isPinned,
-                    pinboardID: entity.pinboardID
+                    pinboardID: entity.pinboardID,
+                    sortOrder: entity.sortOrder
                 )
             }
         let summary = ClipboardHistoryExportSummary(

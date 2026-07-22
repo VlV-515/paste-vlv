@@ -1,7 +1,7 @@
 import Foundation
 
 struct ClipboardHistoryArchive: Codable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     let schemaVersion: Int
     let exportedAt: Date
@@ -73,6 +73,7 @@ struct ClipboardHistoryItem: Codable {
     let isFavorite: Bool
     let isPinned: Bool
     let pinboardID: UUID?
+    let sortOrder: Int32?
 }
 
 struct ClipboardHistoryExportSummary {

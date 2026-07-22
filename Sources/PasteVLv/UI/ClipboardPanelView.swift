@@ -35,6 +35,8 @@ struct ClipboardPanelView: View {
     @State private var draggedPinboardID: UUID?
     @State private var pinboardDropTargetID: UUID?
     @State private var pinboardItemDropTargetID: UUID?
+    @State private var draggedItemID: UUID?
+    @State private var itemDropTargetID: UUID?
 
     private var copy: AppCopy {
         AppCopy(language: appState.appLanguage)
@@ -248,6 +250,9 @@ struct ClipboardPanelView: View {
                                         pinboards: appState.pinboards,
                                         copy: AppCopy(language: appState.appLanguage),
                                         isSelected: appState.selectedItemIDs.contains(item.id),
+                                        allowsDrag: appState.selectedPinboardID == nil,
+                                        allowsReorder: canReorderItems,
+                                        reorderFrame: cardFrames[item.id],
                                         onSelect: {
                                             if !appState.selectedItemIDs.contains(item.id) {
                                                 appState.selectItem(id: item.id)
@@ -264,9 +269,20 @@ struct ClipboardPanelView: View {
                                         onDelete: { pendingDeletion = .items([item.id]) },
                                         onAssign: { appState.assign(itemID: item.id, to: $0) },
                                         onRename: { appState.updateTitle(itemID: item.id, title: $0) },
-                                        onTitleEditingChanged: { isEditingItemTitle = $0 }
+                                        onTitleEditingChanged: { isEditingItemTitle = $0 },
+                                        onReorderChanged: { location in
+                                            updateItemReorderDrag(sourceID: item.id, location: location)
+                                        },
+                                        onReorderEnded: { location in
+                                            finishItemReorderDrag(sourceID: item.id, location: location)
+                                        }
                                     )
                                     .id(item.id)
+                                    .opacity(draggedItemID == item.id ? 0.56 : 1)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .stroke(Color.white.opacity(itemDropTargetID == item.id ? 0.7 : 0), lineWidth: 1.5)
+                                    }
                                     .background {
                                         GeometryReader { geometry in
                                             Color.clear.preference(
@@ -388,6 +404,42 @@ struct ClipboardPanelView: View {
         !cardFrames.contains { _, frame in
             frame.contains(location)
         }
+    }
+
+    private var canReorderItems: Bool {
+        appState.selectedPinboardID != nil && appState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func cardID(at location: CGPoint) -> UUID? {
+        cardFrames.first { _, frame in
+            frame.contains(location)
+        }?.key
+    }
+
+    private func updateItemReorderDrag(sourceID: UUID, location: CGPoint) {
+        draggedItemID = sourceID
+        selectionDrag = nil
+        itemDropTargetID = cardFrames.first { id, frame in
+            id != sourceID && frame.contains(location)
+        }?.key
+    }
+
+    private func finishItemReorderDrag(sourceID: UUID, location: CGPoint) {
+        defer {
+            draggedItemID = nil
+            itemDropTargetID = nil
+        }
+
+        guard let selectedPinboardID = appState.selectedPinboardID,
+              let targetItemID = itemDropTargetID ?? cardID(at: location),
+              targetItemID != sourceID,
+              let sourceIndex = appState.items.firstIndex(where: { $0.id == sourceID }),
+              let targetIndex = appState.items.firstIndex(where: { $0.id == targetItemID }) else {
+            return
+        }
+
+        let destinationIndex = sourceIndex < targetIndex ? targetIndex + 1 : targetIndex
+        appState.reorder(itemID: sourceID, in: selectedPinboardID, to: destinationIndex)
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
@@ -593,6 +645,9 @@ private struct ClipboardCard: View {
     let pinboards: [Pinboard]
     let copy: AppCopy
     let isSelected: Bool
+    let allowsDrag: Bool
+    let allowsReorder: Bool
+    let reorderFrame: CGRect?
     let onSelect: () -> Void
     let dragPayload: () -> String
     let onPaste: () -> Void
@@ -603,6 +658,8 @@ private struct ClipboardCard: View {
     let onAssign: (UUID?) -> Void
     let onRename: (String?) -> Void
     let onTitleEditingChanged: (Bool) -> Void
+    let onReorderChanged: (CGPoint) -> Void
+    let onReorderEnded: (CGPoint) -> Void
     @State private var isEditingTitle = false
     @State private var titleDraft = ""
     @FocusState private var isTitleFocused: Bool
@@ -638,7 +695,17 @@ private struct ClipboardCard: View {
         )
         .shadow(color: cardShadowColor, radius: isSelected || usesPinboardAppearance ? 10 : 7, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .background(CardPointerMonitor(onMouseDown: onSelect, dragPayload: dragPayload))
+        .background(
+            CardPointerMonitor(
+                onMouseDown: onSelect,
+                dragPayload: dragPayload,
+                isDragEnabled: allowsDrag,
+                isReorderEnabled: allowsReorder,
+                reorderFrame: reorderFrame,
+                onReorderChanged: onReorderChanged,
+                onReorderEnded: onReorderEnded
+            )
+        )
         .onTapGesture(count: 2, perform: onPaste)
         .contextMenu {
             Button(copy.paste) { onPaste() }
@@ -1167,9 +1234,22 @@ private extension NSColor {
 private struct CardPointerMonitor: NSViewRepresentable {
     let onMouseDown: () -> Void
     let dragPayload: () -> String
+    let isDragEnabled: Bool
+    let isReorderEnabled: Bool
+    let reorderFrame: CGRect?
+    let onReorderChanged: (CGPoint) -> Void
+    let onReorderEnded: (CGPoint) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onMouseDown: onMouseDown, dragPayload: dragPayload)
+        Coordinator(
+            onMouseDown: onMouseDown,
+            dragPayload: dragPayload,
+            isDragEnabled: isDragEnabled,
+            isReorderEnabled: isReorderEnabled,
+            reorderFrame: reorderFrame,
+            onReorderChanged: onReorderChanged,
+            onReorderEnded: onReorderEnded
+        )
     }
 
     func makeNSView(context: Context) -> NSView {
@@ -1182,6 +1262,11 @@ private struct CardPointerMonitor: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {
         context.coordinator.onMouseDown = onMouseDown
         context.coordinator.dragPayload = dragPayload
+        context.coordinator.isDragEnabled = isDragEnabled
+        context.coordinator.isReorderEnabled = isReorderEnabled
+        context.coordinator.reorderFrame = reorderFrame
+        context.coordinator.onReorderChanged = onReorderChanged
+        context.coordinator.onReorderEnded = onReorderEnded
     }
 
     static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
@@ -1192,14 +1277,32 @@ private struct CardPointerMonitor: NSViewRepresentable {
         weak var hostView: NSView?
         var onMouseDown: () -> Void
         var dragPayload: () -> String
+        var isDragEnabled: Bool
+        var isReorderEnabled: Bool
+        var reorderFrame: CGRect?
+        var onReorderChanged: (CGPoint) -> Void
+        var onReorderEnded: (CGPoint) -> Void
         private var monitor: Any?
         private var mouseDownEvent: NSEvent?
         private var mouseDownLocation: CGPoint?
-        private var hasStartedDrag = false
+        private var dragMode: CardPointerDragMode?
 
-        init(onMouseDown: @escaping () -> Void, dragPayload: @escaping () -> String) {
+        init(
+            onMouseDown: @escaping () -> Void,
+            dragPayload: @escaping () -> String,
+            isDragEnabled: Bool,
+            isReorderEnabled: Bool,
+            reorderFrame: CGRect?,
+            onReorderChanged: @escaping (CGPoint) -> Void,
+            onReorderEnded: @escaping (CGPoint) -> Void
+        ) {
             self.onMouseDown = onMouseDown
             self.dragPayload = dragPayload
+            self.isDragEnabled = isDragEnabled
+            self.isReorderEnabled = isReorderEnabled
+            self.reorderFrame = reorderFrame
+            self.onReorderChanged = onReorderChanged
+            self.onReorderEnded = onReorderEnded
         }
 
         func installMonitorIfNeeded() {
@@ -1218,23 +1321,41 @@ private struct CardPointerMonitor: NSViewRepresentable {
                 case .leftMouseDown where hostView.bounds.contains(location):
                     mouseDownEvent = event
                     mouseDownLocation = location
-                    hasStartedDrag = false
+                    dragMode = nil
                     onMouseDown()
                 case .leftMouseDragged:
                     guard let mouseDownEvent,
                           let mouseDownLocation,
-                          !hasStartedDrag,
                           dragDistance(from: mouseDownLocation, to: location) >= 5 else {
                         return event
                     }
 
-                    hasStartedDrag = true
-                    beginDrag(from: mouseDownEvent, in: hostView)
-                    return nil
+                    if dragMode == .itemReorder,
+                       let reorderLocation = reorderLocation(from: event, in: hostView) {
+                        onReorderChanged(reorderLocation)
+                        return nil
+                    }
+
+                    if dragMode == nil, isDragEnabled {
+                        dragMode = .itemTransfer
+                        beginDrag(from: mouseDownEvent, in: hostView)
+                        return nil
+                    }
+
+                    if dragMode == nil, isReorderEnabled,
+                       let reorderLocation = reorderLocation(from: event, in: hostView) {
+                        dragMode = .itemReorder
+                        onReorderChanged(reorderLocation)
+                        return nil
+                    }
                 case .leftMouseUp:
+                    if dragMode == .itemReorder,
+                       let reorderLocation = reorderLocation(from: event, in: hostView) {
+                        onReorderEnded(reorderLocation)
+                    }
                     mouseDownEvent = nil
                     mouseDownLocation = nil
-                    hasStartedDrag = false
+                    dragMode = nil
                 default:
                     break
                 }
@@ -1277,6 +1398,15 @@ private struct CardPointerMonitor: NSViewRepresentable {
             hypot(current.x - start.x, current.y - start.y)
         }
 
+        private func reorderLocation(from event: NSEvent, in hostView: NSView) -> CGPoint? {
+            guard let reorderFrame else { return nil }
+            let location = hostView.convert(event.locationInWindow, from: nil)
+            return CGPoint(
+                x: reorderFrame.minX + location.x,
+                y: reorderFrame.maxY - location.y
+            )
+        }
+
         private func dragImage() -> NSImage {
             let size = NSSize(width: 172, height: 46)
             let image = NSImage(size: size)
@@ -1304,6 +1434,11 @@ private struct CardPointerMonitor: NSViewRepresentable {
             return image
         }
     }
+}
+
+private enum CardPointerDragMode {
+    case itemTransfer
+    case itemReorder
 }
 
 private struct KeyDownMonitor: NSViewRepresentable {

@@ -91,7 +91,8 @@ final class PersistenceController {
             attribute("contentHash", .stringAttributeType),
             attribute("isFavorite", .booleanAttributeType, defaultValue: false),
             attribute("isPinned", .booleanAttributeType, defaultValue: false),
-            attribute("pinboardID", .UUIDAttributeType, optional: true)
+            attribute("pinboardID", .UUIDAttributeType, optional: true),
+            attribute("sortOrder", .integer32AttributeType, defaultValue: 0)
         ]
 
         return entity

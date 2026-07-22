@@ -22,7 +22,7 @@
 5. `ClipboardRepository` deduplicates by SHA-256 hash and persists the item.
 6. `ClipboardPanelView` displays dark Paste-style horizontal history cards,
    source-app icons/colors, single/multi-file presentations, rich URL metadata
-   previews, draggable/reorderable pinboard chips, search, color-coded group
+   previews, draggable/reorderable pinboard chips and grouped cards, search, color-coded group
    state, Clipboard History reset and first-item preselection on open, mouse drag-rectangle multi-selection,
    left/right keyboard navigation, `Return` paste, `Cmd-A` selection, confirmed
    `Forward Delete` removal, editable card titles, and double-click paste. A
@@ -52,16 +52,16 @@
   - `preview`, `searchableText`, optional payload fields
   - source app metadata
   - `contentHash` for deduplication
-  - favorite, pinned, and optional pinboard assignment
+  - favorite, pinned, optional pinboard assignment, and manual group sort order
 - `PinboardEntity`
   - name, color, sort order, creation date
 - `AppSettings.hiddenHistoryItemIDs`
   - UUIDs for grouped cards removed from Clipboard History; those cards remain
     available from their pinboard until deleted there
 - Images are stored as files in Application Support and referenced by path.
-- JSON import/export uses schema version `3` and contains:
+- JSON import/export uses schema version `4` and contains:
   - pinboards with stable UUIDs
-  - only grouped clipboard items of kind `text`, including optional custom titles
+  - only grouped clipboard items of kind `text`, including optional custom titles and manual order
   - export metadata and timestamp
 
 ## CloudKit Path

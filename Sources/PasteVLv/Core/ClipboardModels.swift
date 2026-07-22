@@ -28,6 +28,7 @@ struct ClipboardItem: Identifiable, Equatable {
     let isFavorite: Bool
     let isPinned: Bool
     let pinboardID: UUID?
+    let sortOrder: Int32
 }
 
 struct Pinboard: Identifiable, Equatable {

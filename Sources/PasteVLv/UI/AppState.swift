@@ -201,6 +201,13 @@ final class AppState: ObservableObject {
         refreshAll()
     }
 
+    func reorder(itemID: UUID, in pinboardID: UUID, to destinationIndex: Int) {
+        repository.reorderItem(id: itemID, in: pinboardID, to: destinationIndex)
+        refreshItems()
+        selectedItemID = itemID
+        selectedItemIDs = [itemID]
+    }
+
     func assign(itemID: UUID, to pinboardID: UUID?) {
         assign(itemIDs: [itemID], to: pinboardID)
     }
